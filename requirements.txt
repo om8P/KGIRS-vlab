@@ -1,0 +1,17 @@
+numpy>=1.24.0
+pandas>=2.0.0
+plotly>=5.15.0
+streamlit>=1.28.0
+fpdf2>=2.7.0
+networkx>=3.1
+
+# --- Optional, only required to upload a PDF or Word (.docx) document ---
+# The other upload formats (.txt, .md, .csv, .tsv) and every other feature of
+# the lab work without these; the interface states which one to install if a
+# file of that type is uploaded without it present.
+pypdf>=4.0.0
+python-docx>=1.1.0
+
+# --- Optional, only for the "Dependency Parse (SVO)" method ---
+# After installing, run: python -m spacy download en_core_web_sm
+spacy>=3.7

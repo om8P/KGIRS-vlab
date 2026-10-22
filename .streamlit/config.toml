@@ -1,0 +1,70 @@
+# Streamlit configuration for the Experiment 7 virtual laboratory.
+#
+# The white + navy identity is declared here using Streamlit's own theme
+# options, in the formal style of institutional virtual labs. Light and dark
+# palettes are defined separately ([theme.light] / [theme.dark]) with no single
+# "base" theme: that gives Streamlit's top-right "..." menu its three-way
+# System / Light / Dark choice, exactly as in a project with no theme config.
+# (A lone custom theme would leave the menu with nothing to switch between.)
+# No [client] toolbarMode override, so the full native menu, including Deploy,
+# stays at Streamlit's default.
+
+[theme]
+font = "sans-serif"
+headingFont = "sans-serif"
+baseRadius = "0.35rem"
+buttonRadius = "0.35rem"
+showWidgetBorder = true
+
+[theme.light]
+primaryColor = "#1B365D"              # navy: buttons, active tab, focus rings
+backgroundColor = "#FFFFFF"           # white page
+secondaryBackgroundColor = "#F3F6FB"  # palest navy tint: inputs, panels, code
+textColor = "#10233F"                 # near-navy ink
+linkColor = "#1B4E8C"
+borderColor = "#D8E0EC"
+dataframeBorderColor = "#D8E0EC"
+dataframeHeaderBackgroundColor = "#EDF2F9"
+codeBackgroundColor = "#F3F6FB"
+greenColor = "#1E7A4C"
+redColor = "#B3261E"
+orangeColor = "#B26A00"
+blueColor = "#1B4E8C"
+chartCategoricalColors = [
+    "#2a78d6",
+    "#eb6834",
+    "#1baf7a",
+    "#eda100",
+    "#e87ba4",
+    "#008300",
+    "#4a3aa7",
+    "#e34948",
+]
+
+[theme.dark]
+primaryColor = "#7FA7E0"              # lightened navy so buttons and focus rings stand out
+backgroundColor = "#0E1726"           # deep navy page
+secondaryBackgroundColor = "#16223A"  # raised navy: inputs, panels, code
+textColor = "#E6EDF7"
+linkColor = "#8DB4EA"
+borderColor = "#2A3A55"
+dataframeBorderColor = "#2A3A55"
+dataframeHeaderBackgroundColor = "#1B2A45"
+codeBackgroundColor = "#16223A"
+greenColor = "#4CC38A"
+redColor = "#F07178"
+orangeColor = "#E8A33D"
+blueColor = "#7FA7E0"
+chartCategoricalColors = [
+    "#5b9bf0",
+    "#f08a5d",
+    "#3fd19b",
+    "#f2bf3d",
+    "#f09ac0",
+    "#4fb84f",
+    "#8c7ae6",
+    "#f06a69",
+]
+
+[browser]
+gatherUsageStats = false
