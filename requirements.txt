@@ -15,3 +15,9 @@ python-docx>=1.1.0
 # --- Optional, only for the "Dependency Parse (SVO)" method ---
 # After installing, run: python -m spacy download en_core_web_sm
 spacy>=3.7
+
+# --- Optional, only for the "BERT Similarity (Sentence-BERT)" method ---
+# Downloads a ~90 MB model (all-MiniLM-L6-v2) from Hugging Face on first use.
+# If you use PyTorch 2.5 or older, keep transformers below 5.
+sentence-transformers>=3,<6
+transformers>=4.44,<5

@@ -333,6 +333,36 @@ TERMS: Dict[str, Dict[str, str]] = {
         "name": "Passive Voice",
         "definition": "A sentence form where the receiver of the action comes first and the doer follows after \"by\". Methods that read left-to-right often reverse the direction of the relation.",
         "example": '"YouTube was acquired by Google" means (Google, acquired, YouTube), not (YouTube, acquired, Google).',
+    },
+    "bert": {
+        "name": "BERT",
+        "definition": "A language model (Bidirectional Encoder Representations from Transformers) trained on huge amounts of text. It reads a whole sentence at once, so the meaning it gives a word depends on the words around it.",
+        "example": 'In "river bank" and "bank loan", BERT gives "bank" two different meanings because of its neighbours.',
+    },
+    "transformer": {
+        "name": "Transformer",
+        "definition": "The neural-network design behind BERT. It uses attention to let every word look at every other word in the sentence, which is how it captures context.",
+        "example": 'In "Google acquired YouTube", attention links "acquired" to both "Google" and "YouTube".',
+    },
+    "embedding": {
+        "name": "Embedding",
+        "definition": "A list of numbers (a vector) that represents the meaning of a piece of text. Texts with similar meanings get similar vectors, so meaning can be compared with arithmetic.",
+        "example": '"X bought Y" and "X acquired Y" get nearly the same vector; "X was born in Y" gets a very different one.',
+    },
+    "cosine_similarity": {
+        "name": "Cosine Similarity",
+        "definition": "A score from about 0 to 1 for how closely two embeddings point in the same direction. 1 means the same meaning, and lower scores mean less related meanings.",
+        "example": 'similarity("X bought Y", "X acquired Y") = 0.84, while similarity("X bought Y", "X was born in Y") = 0.54.',
+    },
+    "sentence_bert": {
+        "name": "Sentence-BERT",
+        "definition": "A version of BERT trained to produce one embedding per whole sentence, so two sentences can be compared directly. This lab uses the compact all-MiniLM-L6-v2 model (about 90 MB).",
+        "example": "encode(\"X acquired Y\") returns a vector of 384 numbers.",
+    },
+    "entity_masking": {
+        "name": "Entity Masking",
+        "definition": "Replacing the entity names with neutral placeholders (X and Y) before comparing meaning, so the model judges the relationship itself and not the particular companies or people.",
+        "example": '"Google acquired YouTube" becomes "X acquired Y".',
     }
 }
 
@@ -645,17 +675,22 @@ These triples represent the atomic building blocks of a [[knowledge_graph|Knowle
    - Uses [[dependency_parsing|dependency parsing]] to label every word with its grammatical role (`nsubj` subject, `dobj` object, `nsubjpass` passive subject, `agent` the "by" phrase, `pobj` object of a preposition). A triple is emitted when two entities attach to the same verb.
    - **Characteristics**: Handles passive voice, one subject with several verbs, and entities far apart, with the highest accuracy of the five methods. The cost is a dependency on a trained language parser (spaCy), and its mistakes become the extractor's mistakes.
 
+6. **[[bert|BERT]] Semantic Similarity Extraction**:
+   - [[bert|BERT]] is a [[transformer]] language model pretrained on huge amounts of text, so it understands words in context. Its [[sentence_bert|Sentence-BERT]] form turns any sentence into an [[embedding]]: a vector of numbers that captures its meaning.
+   - For each pair of entities the method hides the names ([[entity_masking|entity masking]]: *Google acquired YouTube* becomes *X acquired Y*), embeds the text between them, and compares it by [[cosine_similarity|cosine similarity]] with example clauses written for every predicate (*X bought Y*, *X was acquired by Y*, ...). The closest example decides the predicate, its similarity becomes the confidence, and an example in the passive voice swaps the direction.
+   - **Characteristics**: It compares *meaning* instead of words, so it recognises wordings no rule lists (*took control of*, *competitor of*) and handles the passive voice without any grammar rules. The costs: it is a black box that cannot explain *why* two clauses are similar, it needs a ~90 MB model download, and quality depends on the example clauses and the similarity threshold. Unfamiliar wordings simply score too low and are skipped.
+
 ### Systematic Pipeline Workflow
 1. **[[named_entity_recognition|Entity Recognition]]**: Identify mentions of people, organizations, places, dates, and domain terms.
 2. **[[candidate_pair|Candidate Pair Generation]]**: Identify all pairs of entities occurring within the [[word_distance|maximum word distance]] window in each sentence.
-3. **Predicate Assignment**: Decide the relation name for each pair - by matching the intervening text against the [[relation_cue|relation lexicon]], by taking the nearest verb, or by reading the sentence grammar.
+3. **Predicate Assignment**: Decide the relation name for each pair - by matching the intervening text against the [[relation_cue|relation lexicon]], by taking the nearest verb, by reading the sentence grammar, or by comparing meaning with BERT.
 4. **[[triple|Triple Construction]]**: Emit structured facts with attached [[provenance]] (source sentence) and [[confidence|confidence score]].
 5. **[[knowledge_graph|Graph Construction & Verification]]**: Preview the resulting graph, evaluate accuracy against [[reference_set|ground truth]], and export it as CSV, JSON or a portable [[graphml|GraphML]] graph file.
 """,
     "procedure": [
         "Step 1: Study the theoretical principles of relation extraction and examine key IR terms using the interactive notes.",
         "Step 2: Navigate to the Simulation section and choose a sample corpus (or upload/paste custom text).",
-        "Step 3: Choose an extraction strategy (Co-occurrence, Pattern-Based, Hybrid, Nearest-Verb, or Dependency Parse) and adjust the confidence threshold.",
+        "Step 3: Choose an extraction strategy (Co-occurrence, Pattern-Based, Hybrid, Nearest-Verb, Dependency Parse, or BERT Similarity) and adjust the confidence threshold.",
         "Step 4: Execute extraction and explore the 6 analysis tabs: Triples, Annotated Text, Entities, Graph, Flow, and Evaluation.",
         "Step 5: Inspect the interactive Knowledge Graph; toggle predicate labels and test legibility in Light and Dark modes.",
         "Step 6: Click 'Record Current Trial' to log the experiment parameters and results into your session logbook.",
@@ -1088,6 +1123,173 @@ def extract_svo_relationships(text: str, entities: Optional[List[Dict[str, Any]]
     return triples
 
 
+BERT_METHOD = "BERT Similarity (Sentence-BERT)"
+BERT_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+BERT_INSTALL_HINT = "pip install sentence-transformers"
+# A clause is accepted when its best predicate scores at least this cosine similarity AND beats
+# the runner-up predicate by BERT_MIN_MARGIN (so near-ties between unrelated relations are dropped).
+BERT_MIN_SIMILARITY = 0.70
+BERT_MIN_MARGIN = 0.04
+
+# Example clauses for every predicate, written with X = first entity and Y = second entity in
+# reading order. The flag marks clauses where the real subject is the SECOND entity (passive
+# voice), so the triple's direction is swapped.  (template, predicate, subject_is_second)
+_BERT_PROTOTYPES: List[Tuple[str, str, bool]] = [
+    ("X founded Y", "founded", False), ("X co-founded Y", "founded", False),
+    ("X established Y", "founded", False), ("X started Y", "founded", False),
+    ("X launched Y", "founded", False), ("X was founded by Y", "founded", True),
+    ("X acquired Y", "acquired", False), ("X bought Y", "acquired", False),
+    ("X purchased Y", "acquired", False), ("X took over Y", "acquired", False),
+    ("X was acquired by Y", "acquired", True), ("X was bought by Y", "acquired", True),
+    ("X is the CEO of Y", "leads", False), ("X is the chairman of Y", "leads", False),
+    ("X is the president of Y", "leads", False), ("X leads Y", "leads", False),
+    ("X heads Y", "leads", False), ("X is the leader of Y", "leads", False),
+    ("X works at Y", "works_at", False), ("X is employed by Y", "works_at", False),
+    ("X is an employee of Y", "works_at", False),
+    ("X is located in Y", "located_in", False), ("X is based in Y", "located_in", False),
+    ("X is headquartered in Y", "located_in", False), ("X, based in Y", "located_in", False),
+    ("X is situated in Y", "located_in", False), ("X operates in Y", "located_in", False),
+    ("X was born in Y", "born_in", False), ("X is a native of Y", "born_in", False),
+    ("X is married to Y", "married_to", False), ("X is the husband of Y", "married_to", False),
+    ("X is the wife of Y", "married_to", False),
+    ("X developed Y", "created", False), ("X created Y", "created", False),
+    ("X invented Y", "created", False), ("X designed Y", "created", False),
+    ("X built Y", "created", False), ("X was created by Y", "created", True),
+    ("X discovered Y", "discovered", False), ("X isolated Y", "discovered", False),
+    ("X identified Y", "discovered", False),
+    ("X published Y", "authored", False), ("X wrote Y", "authored", False),
+    ("X authored Y", "authored", False), ("X was written by Y", "authored", True),
+    ("X is a subsidiary of Y", "subsidiary_of", False), ("X is part of Y", "subsidiary_of", False),
+    ("X is a division of Y", "subsidiary_of", False), ("X is owned by Y", "subsidiary_of", False),
+    ("X collaborated with Y", "collaborates_with", False),
+    ("X partnered with Y", "collaborates_with", False),
+    ("X is allied with Y", "collaborates_with", False),
+    ("X merged with Y", "merged_with", False), ("X combined with Y", "merged_with", False),
+    ("X studied at Y", "studied_at", False), ("X graduated from Y", "studied_at", False),
+    ("X attended Y", "studied_at", False),
+    ("X reports to Y", "reports_to", False), ("X is managed by Y", "reports_to", False),
+    ("X competes with Y", "competes_with", False), ("X is a rival of Y", "competes_with", False),
+    ("X is competing against Y", "competes_with", False),
+    ("X treats Y", "treats", False), ("X cures Y", "treats", False),
+    ("X alleviates Y", "treats", False),
+    ("X causes Y", "causes", False), ("X leads to Y", "causes", False),
+    ("X triggers Y", "causes", False), ("X induces Y", "causes", False),
+]
+
+
+@st.cache_resource(show_spinner="Loading the BERT model (first run downloads about 90 MB)...")
+def _load_bert_encoder():
+    """Loads the Sentence-BERT model, or returns None when the library/model is unavailable."""
+    try:
+        import torch
+        from sentence_transformers import SentenceTransformer
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        return SentenceTransformer(BERT_MODEL_NAME, device=device)
+    except Exception:
+        return None
+
+
+def bert_available() -> bool:
+    return _load_bert_encoder() is not None
+
+
+def _bert_encode(texts: Sequence[str]) -> Optional[np.ndarray]:
+    """Unit-length BERT embeddings (one row per text), or None if BERT is unavailable."""
+    encoder = _load_bert_encoder()
+    if encoder is None or not texts:
+        return None
+    return np.asarray(encoder.encode(list(texts), normalize_embeddings=True,
+                                     show_progress_bar=False, batch_size=64))
+
+
+@st.cache_resource(show_spinner=False)
+def _bert_prototype_embeddings() -> Optional[np.ndarray]:
+    return _bert_encode([t for t, _, _ in _BERT_PROTOTYPES])
+
+
+def bert_score_clauses(clauses: Sequence[str]) -> Optional[np.ndarray]:
+    """Cosine similarity of each clause to every prototype: shape (clauses, prototypes)."""
+    protos = _bert_prototype_embeddings()
+    vecs = _bert_encode(clauses)
+    if protos is None or vecs is None:
+        return None
+    return vecs @ protos.T
+
+
+def bert_rank_predicates(sim_row: np.ndarray) -> List[Tuple[str, float, int]]:
+    """Best prototype per predicate for one clause, highest similarity first.
+    Each item is (predicate, similarity, prototype_index)."""
+    best: Dict[str, Tuple[float, int]] = {}
+    for idx, (_, predicate, _) in enumerate(_BERT_PROTOTYPES):
+        sim = float(sim_row[idx])
+        if predicate not in best or sim > best[predicate][0]:
+            best[predicate] = (sim, idx)
+    return sorted(((pred, sim, idx) for pred, (sim, idx) in best.items()), key=lambda r: -r[1])
+
+
+def extract_bert_relationships(
+    text: str,
+    entities: Optional[List[Dict[str, Any]]] = None,
+    max_word_distance: int = _MAX_WORDS_BETWEEN,
+) -> List[Dict[str, Any]]:
+    """BERT extraction: compares the MEANING of the clause between two entities with example
+    clauses for each predicate. Entity names are masked as X / Y so only the relationship
+    is judged. Returns [] if BERT is unavailable."""
+    if not bert_available():
+        return []
+    if entities is None:
+        entities = extract_entities(text)
+
+    by_sentence: Dict[int, List[Dict[str, Any]]] = {}
+    for ent in entities:
+        by_sentence.setdefault(ent["sentence_idx"], []).append(ent)
+
+    candidates = []
+    for sent_idx in sorted(by_sentence):
+        ents = sorted(by_sentence[sent_idx], key=lambda e: e["start"])
+        for i in range(len(ents) - 1):
+            subj, obj = ents[i], ents[i + 1]
+            if subj["text"].lower() == obj["text"].lower():
+                continue
+            # Type guard: masking the names hides their type from BERT, so a year would
+            # otherwise look like a valid place or product ("in 2006" -> located_in).
+            if "DATE" in (subj["label"], obj["label"]):
+                continue
+            sentence = subj["sentence"]
+            between = sentence[subj["end"]:obj["start"]].strip()
+            if not between or len(between.split()) > max_word_distance:
+                continue
+            joiner = "" if between.startswith(",") else " "
+            candidates.append((sent_idx, sentence, subj, obj, f"X{joiner}{between} Y"))
+    if not candidates:
+        return []
+
+    sims = bert_score_clauses([c[4] for c in candidates])
+    if sims is None:
+        return []
+
+    triples: List[Dict[str, Any]] = []
+    for (sent_idx, sentence, subj, obj, clause), row in zip(candidates, sims):
+        ranked = bert_rank_predicates(row)
+        top_pred, top_sim, proto_idx = ranked[0]
+        runner_up = ranked[1][1] if len(ranked) > 1 else 0.0
+        if top_sim < BERT_MIN_SIMILARITY or (top_sim - runner_up) < BERT_MIN_MARGIN:
+            continue
+        template, _, swap = _BERT_PROTOTYPES[proto_idx]
+        first, second = (obj, subj) if swap else (subj, obj)
+        triples.append({
+            "id": f"t{len(triples) + 1}",
+            "subject": first["text"], "subject_label": first["label"],
+            "predicate": top_pred,
+            "object": second["text"], "object_label": second["label"],
+            "confidence": round(min(top_sim, 0.99), 2),
+            "cue": f"'{clause}' ~ '{template}' ({top_sim:.2f})",
+            "method": "BERT Similarity",
+            "sentence": sentence, "sentence_idx": sent_idx
+        })
+    return triples
+
+
 def extract_relationships(
     text: str,
     entities: Optional[List[Dict[str, Any]]] = None,
@@ -1100,6 +1302,8 @@ def extract_relationships(
 
     if "Dependency Parse" in method:
         return extract_svo_relationships(text, entities)
+    if "BERT" in method:
+        return extract_bert_relationships(text, entities, max_word_distance)
 
     # Group entities by sentence
     by_sentence: Dict[int, List[Dict[str, Any]]] = {}
@@ -2222,10 +2426,10 @@ def _build_pipeline_diagram(theme: Theme) -> go.Figure:
          "Runs of capitalised words are located and typed as PERSON, ORG, LOCATION, DATE, or MISC."),
         ("Candidate Pairs", "Adjacent entities per sentence",
          "Entities that sit next to each other in the same sentence become candidate subject/object pairs."),
-        ("Predicate Assignment", "Lexicon / nearest verb / grammar",
+        ("Predicate Assignment", "Lexicon / verb / grammar / meaning",
          "The relation name for each pair is decided one of three ways: matching the text between the "
          "entities against an ordered cue lexicon, taking the nearest verb, or reading the grammatical "
-         "roles in the sentence (dependency parse)."),
+         "roles in the sentence (dependency parse), or comparing the clause's meaning with example clauses (BERT)."),
         ("SPO Triple", "Subject, predicate, object, confidence",
          "A pair with an assigned predicate becomes a Subject-Predicate-Object triple with a confidence score."),
     ])
@@ -2322,6 +2526,87 @@ def _build_dependency_arc_figure(doc: Any, theme: Theme) -> go.Figure:
     return fig
 
 
+_BERT_EXAMPLE_CLAUSE = "X was purchased by Y"
+
+
+def _build_bert_similarity_figure(clause: str, theme: Theme) -> Optional[go.Figure]:
+    """Bar chart of how close one masked clause is to the best example clause of each predicate;
+    the winner is highlighted and the acceptance threshold is drawn as a dashed line."""
+    sims = bert_score_clauses([clause])
+    if sims is None:
+        return None
+    ranked = bert_rank_predicates(sims[0])[:10][::-1]
+    names = [r[0] for r in ranked]
+    values = [round(r[1], 3) for r in ranked]
+    winner = len(ranked) - 1
+    colours = [theme.for_type("ORG") if i == winner else _translucent(theme.edge, 0.55) if theme.edge.startswith("#") else theme.edge
+               for i in range(len(ranked))]
+    fig = go.Figure(go.Bar(
+        x=values, y=names, orientation="h", marker=dict(color=colours, cornerradius=5),
+        text=[f"{v:.2f}" for v in values], textposition="outside",
+        customdata=[_BERT_PROTOTYPES[r[2]][0] for r in ranked],
+        hovertemplate="<b>%{y}</b><br>similarity %{x:.2f}<br>closest example: '%{customdata}'<extra></extra>"
+    ))
+    fig.add_vline(x=BERT_MIN_SIMILARITY, line_dash="dash", line_color=theme.muted,
+                  annotation_text=f"accept at {BERT_MIN_SIMILARITY:.2f}", annotation_position="bottom right",
+                  annotation_font=dict(size=10, color=theme.muted))
+    fig.update_xaxes(range=[0, 1.12], title="Cosine similarity to the closest example clause", gridcolor=theme.grid)
+    fig.update_yaxes(gridcolor=theme.grid)
+    fig.update_layout(
+        height=340, margin=dict(l=10, r=20, t=10, b=40), showlegend=False,
+        paper_bgcolor=theme.paper_bg, plot_bgcolor=theme.card_bg, font=dict(color=theme.ink, size=11),
+        hoverlabel=dict(bgcolor=theme.popup_bg, font_color=theme.ink, bordercolor=theme.card_accent, align="left")
+    )
+    return fig
+
+
+_BERT_MAP_PALETTE = ["#4C78A8", "#F58518", "#54A24B", "#E45756", "#B279A2", "#9D755D",
+                     "#72B7B2", "#EECA3B", "#FF9DA6", "#8CD17D", "#79706E", "#D67195"]
+
+
+def _build_bert_meaning_map(clause: str, theme: Theme) -> Optional[go.Figure]:
+    """2-D map of the meaning space: every example clause as a dot (projected from 384 numbers
+    to 2 by PCA), coloured by predicate, with the chosen clause as a star. Clauses that mean
+    the same thing sit together, which is the whole idea of embeddings."""
+    protos = _bert_prototype_embeddings()
+    vecs = _bert_encode([clause])
+    if protos is None or vecs is None:
+        return None
+    stacked = np.vstack([protos, vecs])
+    centred = stacked - stacked.mean(axis=0)
+    _, _, vt = np.linalg.svd(centred, full_matrices=False)
+    coords = centred @ vt[:2].T
+    proto_xy, clause_xy = coords[:-1], coords[-1]
+
+    predicates = list(dict.fromkeys(pred for _, pred, _ in _BERT_PROTOTYPES))
+    colour_of = {pred: _BERT_MAP_PALETTE[i % len(_BERT_MAP_PALETTE)] for i, pred in enumerate(predicates)}
+    fig = go.Figure()
+    for pred in predicates:
+        idx = [i for i, (_, p_, _) in enumerate(_BERT_PROTOTYPES) if p_ == pred]
+        fig.add_trace(go.Scatter(
+            x=proto_xy[idx, 0], y=proto_xy[idx, 1], mode="markers", name=pred, showlegend=False,
+            marker=dict(size=10, color=colour_of[pred], line=dict(width=1, color=theme.halo)),
+            hovertext=[f"<b>{pred}</b><br>'{_BERT_PROTOTYPES[i][0]}'" for i in idx], hoverinfo="text"
+        ))
+        cx, cy = proto_xy[idx, 0].mean(), proto_xy[idx, 1].mean()
+        fig.add_annotation(x=cx, y=cy, text=pred, showarrow=False, yshift=16,
+                           font=dict(size=9.5, color=theme.ink), opacity=0.9)
+    fig.add_trace(go.Scatter(
+        x=[clause_xy[0]], y=[clause_xy[1]], mode="markers+text", showlegend=False,
+        marker=dict(size=20, symbol="star", color=theme.ink, line=dict(width=1.5, color=theme.halo)),
+        text=[f"'{clause}'"], textposition="top center", textfont=dict(size=11, color=theme.ink),
+        hovertext=[f"<b>Your clause</b><br>'{clause}'"], hoverinfo="text"
+    ))
+    fig.update_xaxes(visible=False)
+    fig.update_yaxes(visible=False)
+    fig.update_layout(
+        height=420, margin=dict(l=10, r=10, t=10, b=10),
+        paper_bgcolor=theme.paper_bg, plot_bgcolor=theme.card_bg,
+        hoverlabel=dict(bgcolor=theme.popup_bg, font_color=theme.ink, bordercolor=theme.card_accent, align="left")
+    )
+    return fig
+
+
 # Methods compared side-by-side in the Theory section's "Method Comparison" chart.
 _COMPARISON_METHODS = [
     "Co-occurrence Only",
@@ -2329,6 +2614,7 @@ _COMPARISON_METHODS = [
     "Hybrid (Pattern + Co-occurrence)",
     "Nearest-Verb (Generalized)",
     "Dependency Parse (SVO)",
+    BERT_METHOD,
 ]
 
 SVO_METHOD = "Dependency Parse (SVO)"
@@ -2343,7 +2629,12 @@ def _compute_method_comparison(corpus_name: str = "Tech & Business") -> List[Dic
     entities = extract_entities(corpus["text"])
     rows = []
     for method in _COMPARISON_METHODS:
+        if method == BERT_METHOD and not bert_available():
+            st.warning(f"The BERT method needs the optional BERT library: `{BERT_INSTALL_HINT}`. "
+                       "It will return no triples until installed.")
         if method == SVO_METHOD and not spacy_parser_available():
+            continue
+        if method == BERT_METHOD and not bert_available():
             continue
         triples = extract_relationships(text=corpus["text"], entities=entities, method=method)
         metrics = evaluate_against_reference_set(triples, corpus["gold"])
@@ -2445,8 +2736,8 @@ PDF_THEORY_SUMMARY = (
     "between pairs of entities mentioned in unstructured text, expressing each as a "
     "Subject-Predicate-Object (SPO) triple - the atomic unit from which a Knowledge Graph is "
     "built: entities become nodes, and predicates become directed, labelled edges between them. "
-    "This laboratory implements and compares five extraction strategies; the first four are "
-    "rule-based and need no external NLP model. Pattern-Based extraction emits a triple only when "
+    "This laboratory implements and compares six extraction strategies; four are "
+    "rule-based and need no external NLP model, one uses a grammar parser and one a pretrained BERT model. Pattern-Based extraction emits a triple only when "
     "the text span between two adjacent entities matches an ordered lexicon of relation-cue "
     "regular expressions (e.g. 'acquired', 'is the CEO of'), giving high precision at the cost "
     "of recall. Co-occurrence extraction links every adjacent entity pair with a generic "
@@ -2455,7 +2746,7 @@ PDF_THEORY_SUMMARY = (
     "back to a Co-occurrence edge only when no cue matches, so no candidate pair is ever "
     "dropped outright. Nearest-Verb drops the fixed lexicon and uses the verb between two "
     "entities as the predicate, and Dependency Parse (SVO, using the optional spaCy parser) reads "
-    "the sentence grammar to find who did what to whom, including in the passive voice. Every emitted triple carries a numeric confidence score and its source "
+    "the sentence grammar to find who did what to whom, including in the passive voice, and BERT Similarity (Sentence-BERT) compares the meaning of the text between two entities with example clauses for each predicate. Every emitted triple carries a numeric confidence score and its source "
     "sentence as provenance, so downstream stages (Experiments 8-9: graph database construction "
     "and schema import) can filter or audit it before ingestion."
 )
@@ -2468,6 +2759,7 @@ PDF_METHOD_COMPARISON_ROWS = [
     ("Hybrid", "Medium-High", "High", "Pattern-Based first, Co-occurrence fallback if no cue matches"),
     ("Nearest-Verb", "Medium", "Medium", "Nearest verb between entities becomes the predicate; no word list"),
     ("Dependency Parse", "High", "High", "Grammatical roles (subject/object) decide the triple; handles passive voice"),
+    ("BERT Similarity", "Medium-High", "Medium", "Meaning of the clause is compared with example clauses; no word list, but a black box"),
 ]
 
 
@@ -2843,20 +3135,21 @@ def render_theory_section():
     st.divider()
     st.subheader("Algorithmic Detail: How Each Extraction Method Works")
     st.write(
-        "The five methods below form a progression from a fixed word list to real grammar "
-        "analysis. The first four share the same first three pipeline stages (splitting, "
-        "entity recognition, adjacent candidate-pair generation) and differ only in how a "
-        "pair is turned into a predicate; the Dependency Parse method reads the sentence's "
-        "grammar instead. Each tab shows the procedure as pseudocode, followed by that "
-        "method's *live* output on the same worked example sentence."
+        "The six methods below form a progression from a fixed word list, through grammar "
+        "analysis, to a language model that compares meaning. Five of them share the same "
+        "first three pipeline stages (splitting, entity recognition, adjacent candidate-pair "
+        "generation) and differ only in how a pair is turned into a predicate; the "
+        "Dependency Parse method reads the sentence's grammar instead. Each tab shows the "
+        "procedure as pseudocode, followed by that method's *live* output on the same "
+        "worked example sentence."
     )
 
     _example_text = "Larry Page co-founded Google in California in 1998."
     _example_entities = extract_entities(_example_text)
 
-    tab_cooc, tab_pattern, tab_hybrid, tab_verb, tab_svo = st.tabs([
+    tab_cooc, tab_pattern, tab_hybrid, tab_verb, tab_svo, tab_bert = st.tabs([
         "Co-occurrence Only", "Pattern-Based (Lexicon Match)", "Hybrid (Pattern + Co-occurrence)",
-        "Nearest-Verb (Generalized)", "Dependency Parse (SVO)"
+        "Nearest-Verb (Generalized)", "Dependency Parse (SVO)", "BERT Similarity (Sentence-BERT)"
     ])
 
     with tab_pattern:
@@ -3041,12 +3334,85 @@ def render_theory_section():
             st.plotly_chart(_build_dependency_arc_figure(_parse_doc, theme), use_container_width=True,
                             config={"displayModeBar": False})
             _rows = []
-            for _m in ("Pattern-Based (Lexicon Match)", "Nearest-Verb (Generalized)", SVO_METHOD):
+            _passive_methods = ["Pattern-Based (Lexicon Match)", "Nearest-Verb (Generalized)", SVO_METHOD]
+            if bert_available():
+                _passive_methods.append(BERT_METHOD)
+            for _m in _passive_methods:
                 _t = extract_relationships(text=_passive_text, entities=_passive_entities, method=_m)
                 _got = ", ".join(f"({x['subject']}, {x['predicate']}, {x['object']})" for x in _t) or "(nothing)"
                 _ok = any(x["subject"] == "Google" and x["object"] == "YouTube" for x in _t)
                 _rows.append({"Method": _m, "Extracted": _got, "Correct direction?": "Yes" if _ok else "No"})
             st.dataframe(pd.DataFrame(_rows), hide_index=True, use_container_width=True)
+
+    with tab_bert:
+        write_annotated(
+            "Instead of rules, this method asks a language model what the text between two "
+            "entities *means*. [[bert|BERT]] turns every clause into an [[embedding]] (a "
+            "vector of numbers); the names are first hidden "
+            "([[entity_masking|entity masking]]) so only the relationship is judged. The "
+            "clause is then compared, by [[cosine_similarity|cosine similarity]], with "
+            "example clauses written for every predicate, and the closest meaning wins. An "
+            "example in the [[passive_voice|passive voice]] (*X was acquired by Y*) swaps the "
+            "direction, so the passive is handled by meaning, with no grammar rules. If even "
+            "the best match is not close enough, or two predicates are nearly tied, the pair "
+            "is skipped."
+        )
+        st.code(
+            "prototypes = embed(['X acquired Y', 'X bought Y', 'X was acquired by Y', ...])  # once\n"
+            "for (subject, object) in adjacent_pairs(entities):\n"
+            "    if subject or object is a DATE: continue        # type guard\n"
+            "    clause = 'X ' + text_between + ' Y'              # names masked\n"
+            "    scores = cosine_similarity(embed(clause), prototypes)\n"
+            "    best, runner_up = top_two_predicates(scores)\n"
+            f"    if best.score < {BERT_MIN_SIMILARITY} or best.score - runner_up.score < {BERT_MIN_MARGIN}:\n"
+            "        continue                                    # not close enough / too ambiguous\n"
+            "    if best.example is passive: swap(subject, object)\n"
+            "    emit Triple(subject, best.predicate, object, confidence=best.score, cue=best.example)",
+            language="python"
+        )
+        if not bert_available():
+            st.warning(
+                "This method needs the optional BERT library and model, which are not available on "
+                f"this server. Install with: `{BERT_INSTALL_HINT}` (the model, about 90 MB, downloads "
+                "on first use)."
+            )
+        else:
+            bert_triples = extract_relationships(text=_example_text, entities=_example_entities,
+                                                 method=BERT_METHOD)
+            st.write(f"**Live trace** for: *\"{_example_text}\"*")
+            if bert_triples:
+                st.dataframe(pd.DataFrame(bert_triples)[["subject", "predicate", "object", "confidence", "cue"]],
+                             hide_index=True, use_container_width=True)
+            else:
+                st.info("No clause was similar enough to an example predicate in this sentence.")
+
+            st.markdown("**How the decision is made**")
+            st.caption(
+                "The passive sentence *\"YouTube was purchased by Google\"* becomes the masked clause "
+                f"`{_BERT_EXAMPLE_CLAUSE}` (YouTube = X, Google = Y). That exact wording is not among "
+                "the example clauses, so this shows BERT generalising by meaning. The bars show how "
+                "close it is to the best example of each predicate; the winner must clear the dashed "
+                "threshold and beat the runner-up. Hover a bar to see the example it matched."
+            )
+            _bar_fig = _build_bert_similarity_figure(_BERT_EXAMPLE_CLAUSE, theme)
+            if _bar_fig is not None:
+                st.plotly_chart(_bar_fig, use_container_width=True, config={"displayModeBar": False})
+
+            st.markdown("**The meaning space**")
+            st.caption(
+                "Each dot is one example clause, squeezed from 384 numbers down to two so it can "
+                "be drawn; clauses with similar meanings sit together. The star is the clause above: "
+                "it lands inside the *acquired* group, whatever words it uses."
+            )
+            _map_fig = _build_bert_meaning_map(_BERT_EXAMPLE_CLAUSE, theme)
+            if _map_fig is not None:
+                st.plotly_chart(_map_fig, use_container_width=True, config={"displayModeBar": False})
+            st.caption(
+                "Limits: the model matches against *your* example clauses, so a wording far from "
+                "all of them (e.g. *snapped up*) scores too low and is skipped, and an occasional "
+                "near-miss can win (*joined forces* looks like *merged with*). BERT cannot explain "
+                "why two clauses are similar."
+            )
 
     st.divider()
     st.subheader("Illustrated Example: From Raw Sentences to a Knowledge Graph")
@@ -3092,6 +3458,8 @@ def render_theory_section():
         "0.60 (fixed) | Text using verbs outside the lexicon; no extra software needed |\n"
         "| **Dependency Parse (SVO)** | High | High | Each edge shows its grammatical roles | "
         "0.80-0.85 | Varied or passive phrasing and distant entities; needs the optional spaCy parser |\n"
+        "| **BERT Similarity** | Medium-High | Medium | Black box: shows the closest example clause and its score | "
+        "0.70-0.99 (the similarity score) | Wordings no rule lists; needs the optional BERT model |\n"
     )
     st.plotly_chart(_build_method_comparison_figure(theme), use_container_width=True)
     st.caption(
@@ -3100,8 +3468,9 @@ def render_theory_section():
         "between them because it never drops a candidate pair. Co-occurrence scores 0 on the "
         "strict metrics because it always labels edges `related_to`; Pair Recall shows the "
         "share of correct entity pairs it still found. Nearest-Verb and Dependency Parse "
-        "name the relation from the sentence itself; Dependency Parse is skipped here if "
-        "spaCy is not installed."
+        "name the relation from the sentence itself, and BERT Similarity compares meaning with "
+        "example clauses. Dependency Parse and BERT are skipped here if spaCy or the BERT "
+        "library is not installed."
     )
 
     st.divider()
@@ -3284,10 +3653,12 @@ def render_simulation_section():
                 "Hybrid (Pattern + Co-occurrence)",
                 "Nearest-Verb (Generalized)",
                 "Dependency Parse (SVO)",
+                BERT_METHOD,
             ],
             index=2,
             help="Pattern-Based prioritizes precision; Co-occurrence maximizes recall; Hybrid balances both; "
-                 "Nearest-Verb uses the verb between entities; Dependency Parse reads sentence grammar (needs spaCy)."
+                 "Nearest-Verb uses the verb between entities; Dependency Parse reads sentence grammar (needs spaCy); "
+                 "BERT Similarity compares meaning with example clauses (needs sentence-transformers)."
         )
         if method == SVO_METHOD and not spacy_parser_available():
             st.warning(f"The Dependency Parse method needs the optional spaCy parser: `{SPACY_INSTALL_HINT}`. "
