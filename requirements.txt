@@ -21,3 +21,5 @@ spacy>=3.7
 # If you use PyTorch 2.5 or older, keep transformers below 5.
 sentence-transformers>=3,<6
 transformers>=4.44,<5
+# The trained classifier ships as bert_re_classifier.npz (numpy only). To retrain it:
+#   pip install scikit-learn   then   python train_bert_re.py
