@@ -8,7 +8,7 @@ networkx>=3.1
 # --- Optional, only required to upload a PDF or Word (.docx) document ---
 # The other upload formats (.txt, .md, .csv, .tsv) and every other feature of
 # the lab work without these; the interface states which one to install if a
-
+# file of that type is uploaded without it present.
 pypdf>=4.0.0
 python-docx>=1.1.0
 
