@@ -22,11 +22,13 @@ scores stay an honest test):
 Output: bert_re_classifier.npz (a few tens of KB) next to the app. The app needs only numpy to
 use it. This script additionally needs: scikit-learn, sentence-transformers, huggingface_hub.
 
-Usage:   python train_bert_re.py
+Usage:   python train_bert_re.py               (train and save the classifier + data statistics)
+         python train_bert_re.py --stats-only  (rebuild the same data and save only the statistics)
 """
 
 import json
 import random
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -34,6 +36,7 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 OUT_PATH = HERE / "bert_re_classifier.npz"
+STATS_PATH = HERE / "bert_re_training_stats.json"
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 TYPE_ORDER = ["PERSON", "ORG", "LOCATION", "DATE", "TERM", "MISC"]
 MAX_BETWEEN_WORDS = 12
@@ -335,18 +338,37 @@ def featurise(encoder, rows):
     return np.hstack([emb, types])
 
 
+def write_training_stats(synthetic, public_train):
+    """Examples per relation and source (before the type-noise copies), for the lab's chart."""
+    counts = defaultdict(lambda: {"synthetic": 0, "re-docred": 0})
+    for source, rows in (("synthetic", synthetic), ("re-docred", public_train)):
+        for r in rows:
+            counts[r[2]][source] += 1
+    STATS_PATH.write_text(json.dumps({
+        "model": MODEL_NAME,
+        "per_relation": {k: counts[k] for k in sorted(counts)},
+        "totals": {"synthetic": len(synthetic), "re-docred": len(public_train)},
+    }, indent=1), encoding="utf-8")
+    print(f"saved {STATS_PATH}")
+
+
 def main():
+    # Datasets are built first and always in the same order, so the seeded RNG gives the
+    # same examples whether or not the model is trained.
+    synthetic = _synthetic_examples()
+    public_train = _redocred_examples("train_revised.json", max_pos_per_class=450, max_none=3000)
+    public_dev = _redocred_examples("dev_revised.json", max_pos_per_class=200, max_none=600)
+    print(f"synthetic: {len(synthetic)}  re-docred train: {len(public_train)}  re-docred dev: {len(public_dev)}")
+    write_training_stats(synthetic, public_train)
+    if "--stats-only" in sys.argv:
+        return
+
     import torch
     from sentence_transformers import SentenceTransformer
     from sklearn.linear_model import LogisticRegression
     from sklearn.metrics import accuracy_score
 
     encoder = SentenceTransformer(MODEL_NAME, device="cuda" if torch.cuda.is_available() else "cpu")
-
-    synthetic = _synthetic_examples()
-    public_train = _redocred_examples("train_revised.json", max_pos_per_class=450, max_none=3000)
-    public_dev = _redocred_examples("dev_revised.json", max_pos_per_class=200, max_none=600)
-    print(f"synthetic: {len(synthetic)}  re-docred train: {len(public_train)}  re-docred dev: {len(public_dev)}")
 
     # the held-out paraphrase phrases must not appear in the training data
     training_text = " ".join(r[0] for r in synthetic).lower()

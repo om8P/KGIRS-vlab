@@ -184,6 +184,26 @@ TERMS: Dict[str, Dict[str, str]] = {
         "definition": "The target or destination entity that receives or completes the relation assertion.",
         "example": 'In "Microsoft is located in Redmond", the object is Redmond (LOCATION).',
     },
+    "overfitting": {
+        "name": "Overfitting",
+        "definition": "When a method fits the examples it was built or trained on so closely that its score on them overstates how well it works on new text.",
+        "example": "The BERT method scores 0.87 F1 on the sample corpora it was refined on, but 0.38 on the blind test.",
+    },
+    "training_data": {
+        "name": "Training Data",
+        "definition": "The labelled examples a machine-learning model learns from. A model is only as good as its training data: relations it saw few examples of are recognised less reliably.",
+        "example": '"X bought Y", labelled acquired, is one training example for the BERT classifier.',
+    },
+    "held_out": {
+        "name": "Held-out Data",
+        "definition": "Data deliberately set aside and never used for training or tuning, kept only to measure how well a method works on things it has not seen.",
+        "example": '64 relation wordings, such as "exchanged vows with", were kept out of BERT\'s training to test whether it generalises.',
+    },
+    "blind_test_set": {
+        "name": "Blind Test Set",
+        "definition": "A test set kept completely separate from building and tuning a method, and scored only as a whole, so its score is an honest estimate of real-world performance.",
+        "example": "This lab's 106-sentence blind test: 60 Wikipedia sentences from Re-DocRED plus 46 hand-written ones.",
+    },
     "noun_chunk": {
         "name": "Noun Chunk (Noun Phrase)",
         "definition": "A noun together with the words that describe it. Noun phrases that are the subject or object of a verb often name the concepts a sentence is about, even when they are not capitalised.",
@@ -683,17 +703,35 @@ These triples represent the atomic building blocks of a [[knowledge_graph|Knowle
 
 5. **[[svo_extraction|Dependency-Parse (SVO) Extraction]]**:
    - Uses [[dependency_parsing|dependency parsing]] to label every word with its grammatical role (`nsubj` subject, `dobj` object, `nsubjpass` passive subject, `agent` the "by" phrase, `pobj` object of a preposition). A triple is emitted when two entities attach to the same verb.
-   - **Characteristics**: Handles passive voice, one subject with several verbs, and entities far apart, with the highest accuracy of the five methods. The cost is a dependency on a trained language parser (spaCy), and its mistakes become the extractor's mistakes.
+   - **Characteristics**: Handles passive voice, one subject with several verbs, and entities far apart, making it the most accurate of the rule-based methods. The cost is a dependency on a trained language parser (spaCy), and its mistakes become the extractor's mistakes.
 
-6. **[[bert|BERT]] Semantic Similarity Extraction**:
-   - [[bert|BERT]] is a [[transformer]] language model pretrained on huge amounts of text, so it understands words in context. Its [[sentence_bert|Sentence-BERT]] form turns any sentence into an [[embedding]]: a vector of numbers that captures its meaning.
-   - For each pair of entities the method hides the names ([[entity_masking|entity masking]]: *Google acquired YouTube* becomes *X acquired Y*), embeds the text between them, and passes the [[embedding]] (plus the two entity types) to a small [[classifier]]. The classifier was trained on a few thousand example clauses: wordings written for this lab, and Wikipedia sentences from the public Re-DocRED dataset. It answers with one of the 18 relations, the same relation reversed (a [[passive_voice|passive]] clause: *X was acquired by Y* means Y is the subject), or *none*; its probability becomes the confidence. [[cosine_similarity|Cosine similarity]] is the idea underneath: clauses that mean the same sit close together in embedding space.\n   - Simple reading rules attach each relation to the right entities first: in *Larry Page and Sergey Brin founded Google* both people are founders, and in *Microsoft acquired LinkedIn and partnered with OpenAI* the partnership belongs to Microsoft, not LinkedIn.\n   - **Characteristics**: It compares *meaning* instead of words, so it recognises wordings no rule lists (*took control of*, *is at the helm of*) and handles the passive voice without any grammar rules. The costs: it is a black box that cannot explain *why* a clause got its answer, it needs a ~90 MB model download, and quality depends on the training examples. A wording unlike anything it has seen is skipped instead of guessed.\n
+6. **[[bert|BERT]] Extraction (a trained classifier on BERT embeddings)**:
+   - [[bert|BERT]] is a [[transformer]] language model pretrained on huge amounts of text, so it understands words in context. Its [[sentence_bert|Sentence-BERT]] form turns a sentence into an [[embedding]] (384 numbers) that captures its meaning; [[cosine_similarity|cosine similarity]] measures how close two meanings are.
+   - **Reading rules** first choose which entities to pair: years are skipped; coordinated names (*Larry Page and Sergey Brin founded Google*) are all subjects; after "and", a new verb keeps the earlier subject (*Microsoft acquired LinkedIn and partnered with OpenAI*); and after a comma aside the subject is the entity before it (*Microsoft, based in Redmond, competes with Google*).
+   - For each pair the names are hidden ([[entity_masking|entity masking]]: *X acquired Y*), the clause is embedded, and a small [[classifier]] reads the embedding plus the two entity types. It answers with one of the 18 relations, the same relation reversed (passive voice: *X was acquired by Y* means Y is the subject), or *none*; its probability becomes the confidence.
+   - The classifier learned from [[training_data|training data]]: about 2,000 wordings written for this lab and 6,000 Wikipedia clauses from the public Re-DocRED dataset (MIT licence). Re-DocRED has no examples for 8 of the 18 relations, so those rely on the hand-written wordings alone.
+   - **Characteristics**: It compares *meaning* instead of words, so it recognises wordings no rule lists and handles the passive voice without grammar rules, and it is the most accurate method on the [[blind_test_set|blind test]]. The costs: it is a black box that cannot explain *why*, it needs a ~90 MB model download, and it is only as good as its training examples; a wording unlike anything it has seen is skipped instead of guessed.
+
 ### Systematic Pipeline Workflow
 1. **[[named_entity_recognition|Entity Recognition]]**: Identify mentions of people, organizations, places, dates, and domain terms. When spaCy is installed, its trained statistical model finds the names, the lab's capitalisation rules add names it missed, and [[noun_chunk|noun phrases]] that act as subjects or objects (*radium*, *bacterial infections*) become TERM entities; without spaCy, only the capitalisation rules are used, so lowercase concepts are missed.
 2. **[[candidate_pair|Candidate Pair Generation]]**: Identify all pairs of entities occurring within the [[word_distance|maximum word distance]] window in each sentence.
 3. **Predicate Assignment**: Decide the relation name for each pair - by matching the intervening text against the [[relation_cue|relation lexicon]], by taking the nearest verb, by reading the sentence grammar, or by comparing meaning with BERT.
 4. **[[triple|Triple Construction]]**: Emit structured facts with attached [[provenance]] (source sentence) and [[confidence|confidence score]].
 5. **[[knowledge_graph|Graph Construction & Verification]]**: Preview the resulting graph, evaluate accuracy against [[reference_set|ground truth]], and export it as CSV, JSON or a portable [[graphml|GraphML]] graph file.
+
+### Entity Recognition: the Foundation of Every Method
+Every method above can only link entities that the [[named_entity_recognition|entity recogniser]] found, so its mistakes flow into every later step ([[error_propagation|error propagation]]): a missed entity can never appear in a triple, and a mistyped one (a city tagged PERSON) misleads the methods that use entity types.
+- **Rule-based recognition** (always available): runs of capitalised words, typed by built-in lists and name shapes; anything unknown becomes PERSON. It cannot see lowercase concepts such as *radium* or *bacterial infections*.
+- **Statistical recognition with spaCy** (when installed): a model trained on annotated text finds and types names, the capitalisation rules add names it missed, and [[noun_chunk|noun phrases]] that act as subjects or objects become **TERM** entities. On the sample corpora this change alone raised every method's score.
+- **Still imperfect**: a capitalised word at the start of a sentence can be mistaken for a name, and spaCy sometimes mistypes names (a person tagged as an organisation).
+
+### How the Methods Are Evaluated (and Why Honest Testing Matters)
+- Each sample corpus comes with a [[reference_set|gold reference set]]; [[precision]], [[recall]] and [[f1|F1]] compare the extracted triples with it, and Pair Recall gives partial credit for the right entities with the wrong relation name.
+- A method can look better than it really is when it is tested on the text used to build it. The rules in this lab were refined by studying the four sample corpora's mistakes, and the BERT classifier learned from its [[training_data|training data]], so scores on those texts are optimistic: this is [[overfitting]].
+- Honest numbers need [[held_out|held-out]] data that played no part in building the method. This lab uses two kinds:
+  1. **Unseen wordings**: 64 relation phrasings kept out of BERT's training (*is at the helm of*, *snapped up*, ...). The classifier gets about 7 in 10 right, against 3 in 10 for matching example clauses and almost none for a fixed word list.
+  2. A **[[blind_test_set|blind test set]]** of 106 sentences: 60 real Wikipedia sentences from the Re-DocRED test split (Part A) and 46 hand-written sentences (Part B), built before the last round of changes and only ever scored as a whole.
+- On the blind test every method scores far lower than on the sample corpora: real Wikipedia sentences are long and indirect, so related entities often sit far apart or the relation is only implied. The chart under *How Well Do They Really Work?* below shows the numbers.
 """,
     "procedure": [
         "Step 1: Study the theoretical principles of relation extraction and examine key IR terms using the interactive notes.",
@@ -2829,6 +2867,145 @@ def _build_bert_similarity_figure(clause: str, theme: Theme) -> Optional[go.Figu
     return fig
 
 
+BLIND_RESULTS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "benchmarks", "blind_results.json")
+BERT_TRAINING_STATS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bert_re_training_stats.json")
+
+
+def _load_json_file(path: str) -> Optional[Dict[str, Any]]:
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        return None
+
+
+def _build_bert_steps_figure(theme: Theme) -> go.Figure:
+    """The BERT method as a left-to-right flow, on the passive example sentence."""
+    return _build_flow_boxes(theme, [
+        ("Sentence", "YouTube was purchased by Google",
+         "The method works one sentence at a time, on the entities the recogniser found."),
+        ("Reading rules", "pair: YouTube - Google",
+         "Rules pick which entities to pair: years are skipped, 'A and B' are both subjects, the "
+         "subject carries over after 'and', and after a comma aside it is the entity before it."),
+        ("Mask names", "'X was purchased by Y'",
+         "The entity names are replaced by X and Y so the model judges only the relationship."),
+        ("BERT", "384 numbers",
+         "Sentence-BERT turns the masked clause into an embedding: 384 numbers that capture its meaning."),
+        ("Classifier", "+ entity types",
+         "A small trained classifier reads the 384 numbers plus the two entity types and gives a "
+         "probability for every relation, its reversed form, and NONE."),
+        ("Triple", "Google, acquired, YouTube",
+         "'acquired (reversed)' wins with high probability, so the subject and object are swapped."),
+    ], height=180)
+
+
+def _build_bert_embedding_heatmap(clauses: Sequence[str], theme: Theme) -> Optional[go.Figure]:
+    """Each clause's 384 embedding numbers drawn as one coloured stripe: clauses with similar
+    meanings share a colour pattern."""
+    vecs = _bert_encode(clauses)
+    if vecs is None:
+        return None
+    fig = go.Figure(go.Heatmap(
+        z=vecs, y=[f"'{c}'" for c in clauses], x=list(range(1, vecs.shape[1] + 1)),
+        colorscale="RdBu", zmid=0, showscale=False,
+        hovertemplate="%{y}<br>number %{x}: %{z:.3f}<extra></extra>"
+    ))
+    fig.update_xaxes(title="the 384 numbers of each embedding", showgrid=False, color=theme.muted)
+    fig.update_yaxes(autorange="reversed", color=theme.ink)
+    fig.update_layout(
+        height=200, margin=dict(l=10, r=10, t=10, b=40),
+        paper_bgcolor=theme.paper_bg, plot_bgcolor=theme.card_bg, font=dict(color=theme.ink, size=11),
+        hoverlabel=dict(bgcolor=theme.popup_bg, font_color=theme.ink, bordercolor=theme.card_accent)
+    )
+    return fig
+
+
+def _build_bert_training_data_figure(theme: Theme) -> Optional[go.Figure]:
+    """Training examples per relation, split by source (hand-written vs Re-DocRED)."""
+    stats = _load_json_file(BERT_TRAINING_STATS_PATH)
+    if not stats:
+        return None
+    rows = [(rel, c["synthetic"], c["re-docred"]) for rel, c in stats["per_relation"].items() if rel != "NONE"]
+    rows.sort(key=lambda r: r[1] + r[2])
+    names = [r[0] for r in rows]
+    fig = go.Figure()
+    fig.add_trace(go.Bar(y=names, x=[r[1] for r in rows], orientation="h", name="hand-written wordings",
+                         marker=dict(color=theme.for_type("ORG"), cornerradius=4),
+                         hovertemplate="<b>%{y}</b><br>hand-written: %{x}<extra></extra>"))
+    fig.add_trace(go.Bar(y=names, x=[r[2] for r in rows], orientation="h", name="Re-DocRED (Wikipedia)",
+                         marker=dict(color=theme.for_type("LOCATION"), cornerradius=4),
+                         hovertemplate="<b>%{y}</b><br>Re-DocRED: %{x}<extra></extra>"))
+    fig.update_layout(
+        barmode="stack", height=480, margin=dict(l=10, r=20, t=30, b=40),
+        legend=dict(orientation="h", yanchor="bottom", y=1.01, x=0),
+        paper_bgcolor=theme.paper_bg, plot_bgcolor=theme.card_bg, font=dict(color=theme.ink, size=11),
+        xaxis=dict(title="training examples", gridcolor=theme.grid), yaxis=dict(gridcolor=theme.grid),
+        hoverlabel=dict(bgcolor=theme.popup_bg, font_color=theme.ink, bordercolor=theme.card_accent)
+    )
+    return fig
+
+
+def _build_blind_test_figure(theme: Theme) -> Optional[go.Figure]:
+    """F1 of every method on the blind test: real Wikipedia sentences, hand-written ones, and both."""
+    data = _load_json_file(BLIND_RESULTS_PATH)
+    if not data:
+        return None
+    results = data["results"][::-1]
+    names = [r["method"].split(" (")[0] for r in results]
+    fig = go.Figure()
+    for key, label, colour_key in (("part_a", "Part A: real Wikipedia sentences", "LOCATION"),
+                                   ("part_b", "Part B: hand-written sentences", "ORG"),
+                                   ("both", "Both parts together", "PERSON")):
+        values = [r[key]["f1"] for r in results]
+        fig.add_trace(go.Bar(
+            y=names, x=values, orientation="h", name=label,
+            marker=dict(color=theme.for_type(colour_key), cornerradius=4),
+            text=[f"{v:.2f}" for v in values], textposition="outside",
+            hovertemplate=f"<b>%{{y}}</b><br>{label}<br>F1 %{{x:.2f}}<extra></extra>"
+        ))
+    fig.update_layout(
+        barmode="group", height=460, margin=dict(l=10, r=20, t=30, b=40),
+        legend=dict(orientation="h", yanchor="bottom", y=1.01, x=0),
+        paper_bgcolor=theme.paper_bg, plot_bgcolor=theme.card_bg, font=dict(color=theme.ink, size=11),
+        xaxis=dict(title="F1 score on the blind test", range=[0, 1.05], gridcolor=theme.grid),
+        yaxis=dict(gridcolor=theme.grid),
+        hoverlabel=dict(bgcolor=theme.popup_bg, font_color=theme.ink, bordercolor=theme.card_accent)
+    )
+    return fig
+
+
+# (clause, first entity type, second entity type, correct answer) - wordings found neither in the
+# Pattern lexicon nor in the BERT classifier's training data.
+_BERT_UNSEEN_EXAMPLES = [
+    ("X is at the helm of Y", "PERSON", "ORG", "leads"),
+    ("X snapped up Y", "ORG", "ORG", "acquired"),
+    ("X exchanged vows with Y", "PERSON", "PERSON", "married_to"),
+    ("X was brought into being by Y", "ORG", "PERSON", "founded (reversed)"),
+    ("X is up against Y", "ORG", "ORG", "competes_with"),
+    ("X sparks Y", "MISC", "MISC", "causes"),
+]
+
+
+def _bert_unseen_wordings_table() -> Optional[pd.DataFrame]:
+    """Live answers of the word list and of BERT for wordings neither has seen."""
+    scored = bert_classify_clauses([c[0] for c in _BERT_UNSEEN_EXAMPLES],
+                                   [c[1] for c in _BERT_UNSEEN_EXAMPLES], [c[2] for c in _BERT_UNSEEN_EXAMPLES])
+    if scored is None:
+        return None
+    class_names, probs = scored
+    rows = []
+    for (clause, _, _, correct), row in zip(_BERT_UNSEEN_EXAMPLES, probs):
+        lexicon = next((pred for pattern, pred, _ in _RELATION_PATTERNS
+                        if re.search(pattern, clause, re.IGNORECASE)), "(nothing)")
+        best = int(np.argmax(row))
+        answer = class_names[best].replace("~rev", " (reversed)")
+        if class_names[best] == "NONE" or row[best] < BERT_MIN_PROBABILITY:
+            answer = f"(skipped: {answer})"
+        rows.append({"Clause": clause, "Correct answer": correct, "Word list (Pattern-Based)": lexicon,
+                     "BERT answer": answer, "BERT probability": round(float(row[best]), 2)})
+    return pd.DataFrame(rows)
+
+
 _BERT_MAP_PALETTE = ["#4C78A8", "#F58518", "#54A24B", "#E45756", "#B279A2", "#9D755D",
                      "#72B7B2", "#EECA3B", "#FF9DA6", "#8CD17D", "#79706E", "#D67195"]
 
@@ -3626,6 +3803,9 @@ def render_theory_section():
             "lab and Wikipedia sentences from the public Re-DocRED dataset (MIT licence). If the "
             "best answer is *none*, or not confident enough, the pair is skipped."
         )
+        st.caption("Illustration: the BERT method step by step (hover each box).")
+        st.plotly_chart(_build_bert_steps_figure(theme), use_container_width=True,
+                        config={"displayModeBar": False})
         st.code(
             "# trained once (train_bert_re.py): BERT embeddings + entity types of example clauses -> classifier\n"
             "for (subject, object, clause) in candidate_clauses(entities):   # reading rules, see below\n"
@@ -3658,7 +3838,45 @@ def render_theory_section():
             else:
                 st.info("No clause was similar enough to an example predicate in this sentence.")
 
-            st.markdown("**How the decision is made**")
+            st.markdown("**Step 1 - Reading rules decide which entities to pair**")
+            _rr_text = "Microsoft, based in Redmond, acquired LinkedIn and partnered with OpenAI."
+            _rr_ents = extract_entities(_rr_text)
+            _rr_sentence = _rr_ents[0]["sentence"] if _rr_ents else _rr_text
+            _rr_sorted = sorted((e for e in _rr_ents if e["label"] != "DATE"), key=lambda e: e["start"])
+            _rr_rows = [{"Pairing": "Neighbours only", "Subject": a["text"], "Object": b["text"],
+                         "Clause judged": "X " + _rr_sentence[a["end"]:b["start"]].strip() + " Y"}
+                        for a, b in zip(_rr_sorted, _rr_sorted[1:])]
+            _rr_rows += [{"Pairing": "Reading rules", "Subject": subj["text"], "Object": obj["text"],
+                          "Clause judged": clause}
+                         for subj, obj, clause in _bert_candidate_clauses(_rr_sentence, _rr_ents, _MAX_WORDS_BETWEEN)]
+            st.caption(
+                f"*\"{_rr_text}\"* - pairing only neighbouring entities gives the acquisition to "
+                "Redmond and the partnership to LinkedIn. The reading rules make Microsoft the subject "
+                "after the comma aside and after \"and\", and judge only the words that belong to that pair."
+            )
+            st.dataframe(pd.DataFrame(_rr_rows), hide_index=True, use_container_width=True)
+            _rr_triples = extract_relationships(text=_rr_text, entities=_rr_ents, method=BERT_METHOD)
+            if _rr_triples:
+                st.caption("Triples BERT extracts from this sentence:")
+                st.dataframe(pd.DataFrame(_rr_triples)[["subject", "predicate", "object", "confidence"]],
+                             hide_index=True, use_container_width=True)
+
+            st.markdown("**Step 2 - BERT turns each clause into 384 numbers**")
+            _fp_clauses = ["X bought Y", "X acquired Y", "X was born in Y"]
+            _fp_vecs = _bert_encode(_fp_clauses)
+            if _fp_vecs is not None:
+                _sim = _fp_vecs @ _fp_vecs.T
+                st.caption(
+                    "Each stripe is one clause's embedding, coloured number by number (red = positive, "
+                    "blue = negative). The two buying clauses share much of their pattern; the birth clause "
+                    f"does not. Cosine similarity: bought vs acquired {_sim[0, 1]:.2f}, bought vs born in "
+                    f"{_sim[0, 2]:.2f}, acquired vs born in {_sim[1, 2]:.2f}."
+                )
+                _hm_fig = _build_bert_embedding_heatmap(_fp_clauses, theme)
+                if _hm_fig is not None:
+                    st.plotly_chart(_hm_fig, use_container_width=True, config={"displayModeBar": False})
+
+            st.markdown("**Step 3 - How the decision is made**")
             st.caption(
                 "The passive sentence *\"YouTube was purchased by Google\"* becomes the masked clause "
                 f"`{_BERT_EXAMPLE_CLAUSE}` (YouTube = X, Google = Y). That exact wording is not among "
@@ -3671,7 +3889,7 @@ def render_theory_section():
             if _bar_fig is not None:
                 st.plotly_chart(_bar_fig, use_container_width=True, config={"displayModeBar": False})
 
-            st.markdown("**The meaning space**")
+            st.markdown("**Step 4 - The meaning space**")
             st.caption(
                 "Each dot is one example clause, squeezed from 384 numbers down to two so it can "
                 "be drawn; clauses with similar meanings sit together. The star is the clause above: "
@@ -3680,12 +3898,42 @@ def render_theory_section():
             _map_fig = _build_bert_meaning_map(_BERT_EXAMPLE_CLAUSE, theme)
             if _map_fig is not None:
                 st.plotly_chart(_map_fig, use_container_width=True, config={"displayModeBar": False})
+            st.markdown("**Wordings it has never seen**")
+            _unseen = _bert_unseen_wordings_table()
+            if _unseen is not None:
+                st.caption(
+                    "None of these wordings is in the word list or in BERT's training data. The word list "
+                    "finds nothing, or only its weak catch-all is_a guess; BERT recognises some of them "
+                    "by meaning but gets others wrong - its mistakes are left visible here."
+                )
+                st.dataframe(_unseen, hide_index=True, use_container_width=True)
+
+            st.markdown("**What it learned from**")
+            _train_fig = _build_bert_training_data_figure(theme)
+            if _train_fig is not None:
+                _stats = _load_json_file(BERT_TRAINING_STATS_PATH) or {}
+                _none = _stats.get("per_relation", {}).get("NONE", {})
+                st.caption(
+                    "Training examples per relation. Re-DocRED (real Wikipedia sentences) covers only some "
+                    "relations; the rest rely entirely on wordings written for this lab, which is one reason "
+                    "BERT is less reliable on them. Not shown: "
+                    f"{_none.get('synthetic', 0) + _none.get('re-docred', 0):,} 'no relation' examples."
+                )
+                st.plotly_chart(_train_fig, use_container_width=True, config={"displayModeBar": False})
+
+            _blind = _load_json_file(BLIND_RESULTS_PATH)
+            _bert_blind = next((r for r in (_blind or {}).get("results", []) if r["method"] == BERT_METHOD), None)
+            _blind_note = (
+                f" On the blind test it reached F1 {_bert_blind['part_a']['f1']:.2f} on real Wikipedia "
+                f"sentences and {_bert_blind['part_b']['f1']:.2f} on hand-written ones - the best of the six "
+                "methods, but far below its score on the sample corpora." if _bert_blind else ""
+            )
             st.caption(
-                "Limits: on 64 wordings it had never seen (verbs and phrases kept out of the training "
-                "data) the trained classifier got roughly 7 in 10 right, against 3 in 10 for matching "
-                "example clauses and almost none for a fixed word list. It can still be wrong, it skips "
-                "wordings unlike anything it has seen, and BERT cannot explain why it chose a relation. "
-                "Training data: wordings written for this lab plus the public Re-DocRED dataset (MIT licence)."
+                "Limits: on 64 wordings it had never seen, the trained classifier got roughly 7 in 10 right, "
+                "against 3 in 10 for matching example clauses and almost none for a fixed word list."
+                + _blind_note +
+                " It can still be wrong, it skips wordings unlike anything it has seen, and BERT cannot "
+                "explain why it chose a relation."
             )
 
     st.divider()
@@ -3746,6 +3994,29 @@ def render_theory_section():
         "trained classifier. Dependency Parse and BERT are skipped here if spaCy or the BERT "
         "library is not installed."
     )
+
+    st.subheader("How Well Do They Really Work? (Blind Test)")
+    write_annotated(
+        "The chart above scores the methods on the four sample corpora, which helped shape them, so "
+        "it is optimistic ([[overfitting]]). The [[blind_test_set|blind test]] below uses sentences "
+        "that played no part in building any method: 60 real Wikipedia sentences from the public "
+        "Re-DocRED dataset (Part A) and 46 hand-written sentences (Part B)."
+    )
+    _blind_fig = _build_blind_test_figure(theme)
+    if _blind_fig is None:
+        st.info("Blind-test results are not available. Run `python benchmarks/evaluate_blind.py --save` to create them.")
+    else:
+        st.plotly_chart(_blind_fig, use_container_width=True, config={"displayModeBar": False})
+        _blind_meta = _load_json_file(BLIND_RESULTS_PATH) or {}
+        st.caption(
+            "Every method scores far lower here than on the sample corpora. Real Wikipedia sentences are "
+            "long and indirect, so related entities often sit far apart; the rule-based methods find "
+            "almost none of them (recall under 3%), while BERT recovers the most. Part A can only judge "
+            "the 10 relations Re-DocRED annotates. "
+            f"Measured {_blind_meta.get('date', '')}"
+            + (" with spaCy and the BERT classifier installed." if _blind_meta.get("spacy_available") and
+               _blind_meta.get("bert_classifier_available") else ".")
+        )
 
     st.divider()
     st.subheader("Educational Aim & Learning Objectives")
