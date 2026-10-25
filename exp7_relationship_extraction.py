@@ -184,6 +184,11 @@ TERMS: Dict[str, Dict[str, str]] = {
         "definition": "The target or destination entity that receives or completes the relation assertion.",
         "example": 'In "Microsoft is located in Redmond", the object is Redmond (LOCATION).',
     },
+    "noun_chunk": {
+        "name": "Noun Chunk (Noun Phrase)",
+        "definition": "A noun together with the words that describe it. Noun phrases that are the subject or object of a verb often name the concepts a sentence is about, even when they are not capitalised.",
+        "example": 'In "Penicillin treats bacterial infections", the noun chunk "bacterial infections" becomes a TERM entity.',
+    },
     "named_entity_recognition": {
         "name": "Named Entity Recognition (NER)",
         "definition": "The preceding IR stage that locates mentions of real-world objects in unstructured text and classifies them into predefined types (Experiment 6).",
@@ -684,7 +689,7 @@ These triples represent the atomic building blocks of a [[knowledge_graph|Knowle
    - [[bert|BERT]] is a [[transformer]] language model pretrained on huge amounts of text, so it understands words in context. Its [[sentence_bert|Sentence-BERT]] form turns any sentence into an [[embedding]]: a vector of numbers that captures its meaning.
    - For each pair of entities the method hides the names ([[entity_masking|entity masking]]: *Google acquired YouTube* becomes *X acquired Y*), embeds the text between them, and passes the [[embedding]] (plus the two entity types) to a small [[classifier]]. The classifier was trained on a few thousand example clauses: wordings written for this lab, and Wikipedia sentences from the public Re-DocRED dataset. It answers with one of the 18 relations, the same relation reversed (a [[passive_voice|passive]] clause: *X was acquired by Y* means Y is the subject), or *none*; its probability becomes the confidence. [[cosine_similarity|Cosine similarity]] is the idea underneath: clauses that mean the same sit close together in embedding space.\n   - Simple reading rules attach each relation to the right entities first: in *Larry Page and Sergey Brin founded Google* both people are founders, and in *Microsoft acquired LinkedIn and partnered with OpenAI* the partnership belongs to Microsoft, not LinkedIn.\n   - **Characteristics**: It compares *meaning* instead of words, so it recognises wordings no rule lists (*took control of*, *is at the helm of*) and handles the passive voice without any grammar rules. The costs: it is a black box that cannot explain *why* a clause got its answer, it needs a ~90 MB model download, and quality depends on the training examples. A wording unlike anything it has seen is skipped instead of guessed.\n
 ### Systematic Pipeline Workflow
-1. **[[named_entity_recognition|Entity Recognition]]**: Identify mentions of people, organizations, places, dates, and domain terms.
+1. **[[named_entity_recognition|Entity Recognition]]**: Identify mentions of people, organizations, places, dates, and domain terms. When spaCy is installed, its trained statistical model finds the names, the lab's capitalisation rules add names it missed, and [[noun_chunk|noun phrases]] that act as subjects or objects (*radium*, *bacterial infections*) become TERM entities; without spaCy, only the capitalisation rules are used, so lowercase concepts are missed.
 2. **[[candidate_pair|Candidate Pair Generation]]**: Identify all pairs of entities occurring within the [[word_distance|maximum word distance]] window in each sentence.
 3. **Predicate Assignment**: Decide the relation name for each pair - by matching the intervening text against the [[relation_cue|relation lexicon]], by taking the nearest verb, by reading the sentence grammar, or by comparing meaning with BERT.
 4. **[[triple|Triple Construction]]**: Emit structured facts with attached [[provenance]] (source sentence) and [[confidence|confidence score]].
@@ -897,23 +902,38 @@ def _split_sentences(text: str) -> List[str]:
     return sentences
 
 
-def extract_entities(text: str) -> List[Dict[str, Any]]:
-    """Lightweight deterministic NER fallback identifying PERSON, ORG, LOCATION, DATE, and TERM."""
+_KNOWN_LOCATIONS = {
+    "california", "mountain view", "redmond", "warsaw", "paris", "london",
+    "mumbai", "bengaluru", "chennai", "delhi", "tokyo", "new york", "san francisco",
+    "india", "france", "poland", "usa", "switzerland", "cambridge", "oxford"
+}
+_KNOWN_ORGS = {
+    "google", "alphabet", "microsoft", "youtube", "linkedin", "openai",
+    "infosys", "tata group", "tata consultancy services", "curie institute",
+    "university of paris", "indian space research organisation", "isro",
+    "stanford university", "harvard", "mit", "who", "pfizer", "apple", "amazon"
+}
+
+
+def _rule_entity_type(span_text: str) -> Optional[str]:
+    """Type from the lab's own lists and name-shape rules, or None when they don't decide."""
+    lowered = span_text.lower()
+    if lowered in _KNOWN_LOCATIONS or any(hint in span_text for hint in _LOC_HINTS):
+        return "LOCATION"
+    if lowered in _KNOWN_ORGS or any(span_text.endswith(sfx) for sfx in _ORG_SUFFIXES):
+        return "ORG"
+    if re.search(r"\b(University|Institute|College|Academy|Hospital|Board)\b", span_text):
+        return "ORG"
+    return None
+
+
+def _extract_entities_rules(text: str) -> List[Dict[str, Any]]:
+    """Rule-based NER (no library): runs of capitalised words, typed by lists and name shape
+    (anything undecided becomes PERSON), plus 4-digit years as DATE. Used on its own when spaCy
+    is not installed, and as a second source alongside spaCy when it is."""
     sentences = _split_sentences(text)
     entities = []
     entity_id = 1
-
-    known_locations = {
-        "california", "mountain view", "redmond", "warsaw", "paris", "london",
-        "mumbai", "bengaluru", "chennai", "delhi", "tokyo", "new york", "san francisco",
-        "india", "france", "poland", "usa", "switzerland", "cambridge", "oxford"
-    }
-    known_orgs = {
-        "google", "alphabet", "microsoft", "youtube", "linkedin", "openai",
-        "infosys", "tata group", "tata consultancy services", "curie institute",
-        "university of paris", "indian space research organisation", "isro",
-        "stanford university", "harvard", "mit", "who", "pfizer", "apple", "amazon"
-    }
 
     # Words that also occur in lower case somewhere in the document are ordinary words
     # ("Average users..." / "the average"), so a lone capitalised one at the start of a
@@ -939,15 +959,7 @@ def extract_entities(text: str) -> List[Dict[str, Any]]:
                     and span_text.lower() in lowercase_words):
                 continue
 
-            lowered = span_text.lower()
-            if lowered in known_locations or any(hint in span_text for hint in _LOC_HINTS):
-                label = "LOCATION"
-            elif lowered in known_orgs or any(span_text.endswith(sfx) for sfx in _ORG_SUFFIXES):
-                label = "ORG"
-            elif re.search(r"\b(University|Institute|College|Academy|Hospital|Board)\b", span_text):
-                label = "ORG"
-            else:
-                label = "PERSON"
+            label = _rule_entity_type(span_text) or "PERSON"
 
             entities.append({
                 "id": f"e{entity_id}",
@@ -1001,6 +1013,120 @@ def spacy_parser_available() -> bool:
 
 
 SPACY_INSTALL_HINT = "pip install spacy && python -m spacy download en_core_web_sm"
+
+_SPACY_LABEL_MAP = {
+    "PERSON": "PERSON", "ORG": "ORG", "GPE": "LOCATION", "LOC": "LOCATION", "FAC": "LOCATION",
+    "PRODUCT": "MISC", "WORK_OF_ART": "MISC", "EVENT": "MISC", "LAW": "MISC", "NORP": "MISC",
+}
+# Noun-phrase subjects / objects that are concepts ("radium", "bacterial infections") become TERM
+# entities - but not generic words that only refer back to something already named.
+_TERM_DEPS = {"nsubj", "nsubjpass", "dobj", "pobj", "conj"}
+_GENERIC_TERM_HEADS = {
+    "company", "firm", "business", "board", "husband", "wife", "chairman", "chairperson", "ceo",
+    "system", "year", "time", "people", "person", "team", "deal", "market", "way", "part", "kind",
+    "number", "member", "country", "city", "state", "town", "work", "product", "service",
+    "organisation", "organization", "program", "programme", "use", "lot", "thing", "case", "result",
+    "study", "report", "information", "fact", "day", "week", "month", "decade", "century", "rest",
+    "side", "end", "interest", "level", "metric", "average", "past", "group", "head", "leader",
+    "user", "customer", "student", "share", "stake", "money", "billion", "million", "percent",
+    "executive", "director", "president", "manager", "founder", "officer",
+}
+_DETERMINERS = {"the", "a", "an", "this", "that", "these", "those", "some", "any", "each", "every",
+                "no", "another", "such", "its", "their"}
+
+
+def _term_spans(doc) -> List[Tuple[int, int, str]]:
+    """(start_char, end_char, text) of concept noun phrases in one parsed sentence."""
+    spans = []
+    for chunk in doc.noun_chunks:
+        root = chunk.root
+        if root.pos_ != "NOUN" or root.dep_ not in _TERM_DEPS:
+            continue
+        # capitalised only because it starts the sentence ("Penicillin treats ...") is still a concept
+        if not (root.text.islower() or chunk.start == 0):
+            continue
+        if root.lemma_.lower() in _GENERIC_TERM_HEADS:
+            continue
+        tokens = list(chunk)
+        while tokens and tokens[0].dep_ == "poss":
+            tokens = tokens[1:]
+        if not tokens or tokens[0].lower_ in _DETERMINERS or tokens[0].pos_ == "PRON":
+            continue
+        if any(t.pos_ == "PROPN" for t in tokens):
+            continue
+        end_tok = tokens[-1]
+        for child in root.children:   # attach an "of" phrase: "theory of relativity"
+            if child.dep_ == "prep" and child.lower_ == "of" and child.i == end_tok.i + 1:
+                pobj = [c for c in child.children if c.dep_ == "pobj"]
+                if pobj and pobj[0].pos_ in ("NOUN", "PROPN"):
+                    end_tok = pobj[0]
+        start, end = tokens[0].idx, end_tok.idx + len(end_tok.text)
+        spans.append((start, end, doc.text[start:end]))
+    return spans
+
+
+def _extract_entities_spacy(text: str, nlp) -> List[Dict[str, Any]]:
+    """spaCy-based NER. Merges three sources per sentence (earlier sources win on overlap):
+    spaCy's statistical named entities, the lab's capitalised-name rules for names spaCy missed,
+    and TERM concepts from noun phrases. Years are added as DATE, as in the rule finder."""
+    sentences = _split_sentences(text)
+    rule_ents: Dict[int, List[Dict[str, Any]]] = {}
+    for ent in _extract_entities_rules(text):
+        rule_ents.setdefault(ent["sentence_idx"], []).append(ent)
+
+    entities: List[Dict[str, Any]] = []
+    for sent_idx, (sentence, doc) in enumerate(zip(sentences, nlp.pipe(sentences))):
+        taken: List[Tuple[int, int]] = []
+
+        def free(a: int, b: int) -> bool:
+            return all(b <= x or a >= y for x, y in taken)
+
+        def add(a: int, b: int, label: str) -> None:
+            taken.append((a, b))
+            entities.append({"id": f"e{len(entities) + 1}", "text": sentence[a:b], "label": label,
+                             "start": a, "end": b, "sentence_idx": sent_idx, "sentence": sentence})
+
+        for ent in doc.ents:
+            if ent.label_ not in _SPACY_LABEL_MAP:
+                continue
+            toks = [t for t in ent]
+            while toks and toks[0].lower_ in ("the", "a", "an"):
+                toks = toks[1:]
+            while toks and toks[-1].text in ("'s", "'"):
+                toks = toks[:-1]
+            if not toks:
+                continue
+            a, b = toks[0].idx, toks[-1].idx + len(toks[-1].text)
+            span_text = sentence[a:b]
+            if span_text in _STOPWORD_CAPS or not free(a, b):
+                continue
+            add(a, b, _rule_entity_type(span_text) or _SPACY_LABEL_MAP[ent.label_])
+
+        for ent in rule_ents.get(sent_idx, []):
+            if not free(ent["start"], ent["end"]):
+                continue
+            if ent["label"] != "DATE":
+                # A capitalised word spaCy reads as an ordinary word ("Chronic smoking ...",
+                # "Penicillin treats ...") is capitalised by position, not because it is a name.
+                span = doc.char_span(ent["start"], ent["end"], alignment_mode="expand")
+                if span is not None and not any(t.pos_ == "PROPN" for t in span):
+                    continue
+            add(ent["start"], ent["end"], ent["label"])
+
+        for a, b, _ in _term_spans(doc):
+            if free(a, b):
+                add(a, b, "TERM")
+
+    return entities
+
+
+def extract_entities(text: str) -> List[Dict[str, Any]]:
+    """Named-entity recognition for every method in the lab: spaCy's statistical model plus the
+    lab's rules when spaCy is installed, the rules alone otherwise. Same output either way."""
+    nlp = _load_spacy_parser()
+    if nlp is None:
+        return _extract_entities_rules(text)
+    return _extract_entities_spacy(text, nlp)
 
 
 def extract_svo_relationships(text: str, entities: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
@@ -1273,6 +1399,7 @@ def bert_classify_clauses(
     types = model["types"]
     onehot = np.zeros((len(clauses), 2 * len(types)))
     for i, (t1, t2) in enumerate(zip(first_types, second_types)):
+        t1, t2 = ("MISC" if t1 == "TERM" else t1), ("MISC" if t2 == "TERM" else t2)
         onehot[i, types.index(t1) if t1 in types else types.index("MISC")] = 1.0
         onehot[i, len(types) + (types.index(t2) if t2 in types else types.index("MISC"))] = 1.0
     logits = np.hstack([vecs, onehot]) @ model["coef"].T + model["intercept"]
@@ -2549,8 +2676,10 @@ def _build_pipeline_diagram(theme: Theme) -> go.Figure:
          "The document exactly as supplied - sample corpus, typed text, or an uploaded file."),
         ("Sentence Splitting", "Split on . ! ?",
          "The text is broken into individual sentences; every later stage works one sentence at a time."),
-        ("Entity Recognition", "Capitalised-span NER",
-         "Runs of capitalised words are located and typed as PERSON, ORG, LOCATION, DATE, or MISC."),
+        ("Entity Recognition", "spaCy NER + rules",
+         "spaCy's trained model finds names (PERSON, ORG, LOCATION, ...), the lab's capitalisation rules "
+         "add names it missed, and subject/object noun phrases become TERM concepts. Without spaCy, "
+         "only the capitalisation rules run."),
         ("Candidate Pairs", "Adjacent entities per sentence",
          "Entities that sit next to each other in the same sentence become candidate subject/object pairs."),
         ("Predicate Assignment", "Lexicon / verb / grammar / meaning",
