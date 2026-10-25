@@ -10,11 +10,14 @@ predicate is reported as "unjudged" instead of being counted as a false positive
 
 Report aggregate scores only; never tune on individual errors in this set.
 
-Usage:   python benchmarks/evaluate_blind.py
+Usage:   python benchmarks/evaluate_blind.py          (print the table)
+         python benchmarks/evaluate_blind.py --save   (also write benchmarks/blind_results.json,
+                                                       which the lab's Theory page charts)
 """
 
 import importlib.util
 import json
+from datetime import date
 import re
 import sys
 from pathlib import Path
@@ -89,6 +92,7 @@ def main():
     header = f"{'method':34} {'part A P/R/F1':>20} {'unjudged':>9} {'part B P/R/F1':>20} {'both F1':>8}"
     print(header)
     print("-" * len(header))
+    results = []
     for method in app._COMPARISON_METHODS:
         a = score(app, part_a, method, judged)
         b = score(app, part_b, method)
@@ -98,6 +102,18 @@ def main():
         both = 2 * p * r / (p + r) if p + r else 0.0
         print(f"{method[:34]:34} {a['p']:.2f}/{a['r']:.2f}/{a['f1']:.2f}".ljust(55)
               + f" {a['unjudged']:>9} " + f"{b['p']:.2f}/{b['r']:.2f}/{b['f1']:.2f}".rjust(20) + f" {both:>8.2f}")
+        results.append({"method": method, "part_a": a, "part_b": b,
+                        "both": {"p": p, "r": r, "f1": both}})
+    if "--save" in sys.argv:
+        out = HERE / "blind_results.json"
+        out.write_text(json.dumps({
+            "date": date.today().isoformat(),
+            "spacy_available": app.spacy_parser_available(),
+            "bert_classifier_available": app.bert_classifier_available(),
+            "part_a_sentences": len(part_a), "part_b_sentences": len(part_b),
+            "results": results,
+        }, indent=1), encoding="utf-8")
+        print(f"\nsaved {out}")
 
 
 if __name__ == "__main__":

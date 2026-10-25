@@ -1,0 +1,85 @@
+{
+ "model": "sentence-transformers/all-MiniLM-L6-v2",
+ "per_relation": {
+  "NONE": {
+   "synthetic": 340,
+   "re-docred": 3000
+  },
+  "acquired": {
+   "synthetic": 120,
+   "re-docred": 0
+  },
+  "authored": {
+   "synthetic": 102,
+   "re-docred": 236
+  },
+  "born_in": {
+   "synthetic": 66,
+   "re-docred": 435
+  },
+  "causes": {
+   "synthetic": 78,
+   "re-docred": 0
+  },
+  "collaborates_with": {
+   "synthetic": 84,
+   "re-docred": 0
+  },
+  "competes_with": {
+   "synthetic": 66,
+   "re-docred": 0
+  },
+  "created": {
+   "synthetic": 144,
+   "re-docred": 228
+  },
+  "discovered": {
+   "synthetic": 90,
+   "re-docred": 0
+  },
+  "founded": {
+   "synthetic": 132,
+   "re-docred": 99
+  },
+  "leads": {
+   "synthetic": 132,
+   "re-docred": 193
+  },
+  "located_in": {
+   "synthetic": 178,
+   "re-docred": 900
+  },
+  "married_to": {
+   "synthetic": 72,
+   "re-docred": 354
+  },
+  "merged_with": {
+   "synthetic": 54,
+   "re-docred": 0
+  },
+  "reports_to": {
+   "synthetic": 60,
+   "re-docred": 0
+  },
+  "studied_at": {
+   "synthetic": 78,
+   "re-docred": 160
+  },
+  "subsidiary_of": {
+   "synthetic": 102,
+   "re-docred": 326
+  },
+  "treats": {
+   "synthetic": 72,
+   "re-docred": 0
+  },
+  "works_at": {
+   "synthetic": 102,
+   "re-docred": 179
+  }
+ },
+ "totals": {
+  "synthetic": 2072,
+  "re-docred": 6110
+ }
+}
