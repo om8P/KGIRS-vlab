@@ -1,0 +1,1791 @@
+{
+ "description": "Blind test set for Experiment 7. Report aggregate scores only; never tune on it.",
+ "part_a_judged_predicates": [
+  "authored",
+  "born_in",
+  "created",
+  "founded",
+  "leads",
+  "located_in",
+  "married_to",
+  "studied_at",
+  "subsidiary_of",
+  "works_at"
+ ],
+ "documents": [
+  {
+   "id": "A01",
+   "part": "A",
+   "source": "Re-DocRED test doc 401 sentence 2",
+   "text": "Bloomberg L.P. provides financial software tools such as an analytics and equity trading platform, data services, and news to financial companies and organizations through the Bloomberg Terminal (via its Bloomberg Professional Service), its core revenue - generating product.",
+   "gold": [
+    [
+     "Bloomberg L.P.",
+     "created",
+     "Bloomberg Professional Service"
+    ],
+    [
+     "Bloomberg L.P.",
+     "created",
+     "Bloomberg Terminal"
+    ],
+    [
+     "Bloomberg Professional Service",
+     "subsidiary_of",
+     "Bloomberg L.P."
+    ],
+    [
+     "Bloomberg Terminal",
+     "subsidiary_of",
+     "Bloomberg L.P."
+    ]
+   ]
+  },
+  {
+   "id": "A02",
+   "part": "A",
+   "source": "Re-DocRED test doc 405 sentence 2",
+   "text": "His father, from a family that originated in Guyenne, was an intimate of King Henry IV of France",
+   "gold": [
+    [
+     "Guyenne",
+     "located_in",
+     "France"
+    ]
+   ]
+  },
+  {
+   "id": "A03",
+   "part": "A",
+   "source": "Re-DocRED test doc 159 sentence 5",
+   "text": "The geographic center of Massachusetts is located in the town of Rutland.",
+   "gold": [
+    [
+     "Rutland",
+     "located_in",
+     "Massachusetts"
+    ]
+   ]
+  },
+  {
+   "id": "A04",
+   "part": "A",
+   "source": "Re-DocRED test doc 483 sentence 0",
+   "text": "The Exe estuary is an estuary on the south coast of Devon, England.",
+   "gold": [
+    [
+     "Devon",
+     "located_in",
+     "England"
+    ],
+    [
+     "Exe estuary",
+     "located_in",
+     "Devon"
+    ],
+    [
+     "Exe estuary",
+     "located_in",
+     "England"
+    ]
+   ]
+  },
+  {
+   "id": "A05",
+   "part": "A",
+   "source": "Re-DocRED test doc 195 sentence 5",
+   "text": "He graduated from Mercersburg Academy in Pennsylvania in 1910.",
+   "gold": [
+    [
+     "Mercersburg Academy",
+     "located_in",
+     "Pennsylvania"
+    ]
+   ]
+  },
+  {
+   "id": "A06",
+   "part": "A",
+   "source": "Re-DocRED test doc 110 sentence 6",
+   "text": "Taiwan is completely under the administration of the Republic of China, is excluded from this list.",
+   "gold": [
+    [
+     "Taiwan",
+     "located_in",
+     "Republic of China"
+    ]
+   ]
+  },
+  {
+   "id": "A07",
+   "part": "A",
+   "source": "Re-DocRED test doc 53 sentence 1",
+   "text": "Mitchell is located at the junction of Interstate 270 and Illinois Route 203, part of former U.S. Highway 66.",
+   "gold": [
+    [
+     "Mitchell",
+     "located_in",
+     "U.S. Highway 66"
+    ]
+   ]
+  },
+  {
+   "id": "A08",
+   "part": "A",
+   "source": "Re-DocRED test doc 195 sentence 14",
+   "text": "He was interred in Maplewood Cemetery, Norwich, Connecticut.",
+   "gold": [
+    [
+     "Maplewood Cemetery",
+     "located_in",
+     "Connecticut"
+    ],
+    [
+     "Maplewood Cemetery",
+     "located_in",
+     "Norwich"
+    ]
+   ]
+  },
+  {
+   "id": "A09",
+   "part": "A",
+   "source": "Re-DocRED test doc 45 sentence 0",
+   "text": "Eclipse is the third novel in the Twilight Saga by Stephenie Meyer.",
+   "gold": [
+    [
+     "Stephenie Meyer",
+     "authored",
+     "Eclipse"
+    ],
+    [
+     "Stephenie Meyer",
+     "authored",
+     "Twilight Saga"
+    ],
+    [
+     "Stephenie Meyer",
+     "created",
+     "Twilight Saga"
+    ]
+   ]
+  },
+  {
+   "id": "A10",
+   "part": "A",
+   "source": "Re-DocRED test doc 309 sentence 4",
+   "text": "It currently plays in the Italian first division LBA as well as in the Basketball Champions League.",
+   "gold": [
+    [
+     "LBA",
+     "located_in",
+     "Italian"
+    ]
+   ]
+  },
+  {
+   "id": "A11",
+   "part": "A",
+   "source": "Re-DocRED test doc 252 sentence 12",
+   "text": "Pakistani students that are finishing their college can apply for an opportunity of having their University studies done in Brazil, with tuition costs covered by the Brazilian Government, through the Program for Exchange Students – Undergraduate (PEC - G).",
+   "gold": [
+    [
+     "Brazilian Government",
+     "located_in",
+     "Brazil"
+    ]
+   ]
+  },
+  {
+   "id": "A12",
+   "part": "A",
+   "source": "Re-DocRED test doc 167 sentence 0",
+   "text": "According to the Bible, Medan (\" contention; to twist, conflict \"); also spelt Madan was the third son of Abraham, the patriarch of the Israelites, and Keturah whom he we d after the death of Sarah.",
+   "gold": [
+    [
+     "Abraham",
+     "married_to",
+     "Keturah"
+    ],
+    [
+     "Abraham",
+     "married_to",
+     "Sarah"
+    ],
+    [
+     "Keturah",
+     "married_to",
+     "Abraham"
+    ],
+    [
+     "Sarah",
+     "married_to",
+     "Abraham"
+    ]
+   ]
+  },
+  {
+   "id": "A13",
+   "part": "A",
+   "source": "Re-DocRED test doc 234 sentence 1",
+   "text": "The Bulls play their home games at Durham Bulls Athletic Park located in the downtown area of Durham, North Carolina.",
+   "gold": [
+    [
+     "Bulls",
+     "located_in",
+     "North Carolina"
+    ],
+    [
+     "Durham",
+     "located_in",
+     "North Carolina"
+    ],
+    [
+     "Durham Bulls Athletic Park",
+     "located_in",
+     "Durham"
+    ],
+    [
+     "Durham Bulls Athletic Park",
+     "located_in",
+     "North Carolina"
+    ]
+   ]
+  },
+  {
+   "id": "A14",
+   "part": "A",
+   "source": "Re-DocRED test doc 235 sentence 1",
+   "text": "In Bad Astronaut, Joey Cape explores a style of alternative rock, with lyrics often about deep and intricate personal matters.",
+   "gold": [
+    [
+     "Joey Cape",
+     "founded",
+     "Bad Astronaut"
+    ]
+   ]
+  },
+  {
+   "id": "A15",
+   "part": "A",
+   "source": "Re-DocRED test doc 121 sentence 1",
+   "text": "He was born and died in Montgomery, Alabama.",
+   "gold": [
+    [
+     "Montgomery",
+     "located_in",
+     "Alabama"
+    ]
+   ]
+  },
+  {
+   "id": "A16",
+   "part": "A",
+   "source": "Re-DocRED test doc 450 sentence 6",
+   "text": "Prior to the merger with LAN, the company closed its capital, transferring its shares to LATAM Airlines Group.",
+   "gold": [
+    [
+     "LAN",
+     "subsidiary_of",
+     "LATAM Airlines Group"
+    ]
+   ]
+  },
+  {
+   "id": "A17",
+   "part": "A",
+   "source": "Re-DocRED test doc 177 sentence 0",
+   "text": "Los Alerces National Park () is located in the Andes in Chubut Province in the Patagonian region of Argentina.",
+   "gold": [
+    [
+     "Andes",
+     "located_in",
+     "Argentina"
+    ],
+    [
+     "Andes",
+     "located_in",
+     "Chubut Province"
+    ],
+    [
+     "Andes",
+     "located_in",
+     "Patagonian"
+    ],
+    [
+     "Chubut Province",
+     "located_in",
+     "Argentina"
+    ],
+    [
+     "Chubut Province",
+     "located_in",
+     "Patagonian"
+    ],
+    [
+     "Los Alerces National Park",
+     "located_in",
+     "Argentina"
+    ],
+    [
+     "Los Alerces National Park",
+     "located_in",
+     "Chubut Province"
+    ],
+    [
+     "Los Alerces National Park",
+     "located_in",
+     "Patagonian"
+    ],
+    [
+     "Patagonian",
+     "located_in",
+     "Argentina"
+    ]
+   ]
+  },
+  {
+   "id": "A18",
+   "part": "A",
+   "source": "Re-DocRED test doc 125 sentence 0",
+   "text": "Suikerbosrand Nature Reserve is a protected area in the Suikerbosrand Range, South Africa.",
+   "gold": [
+    [
+     "Suikerbosrand Nature Reserve",
+     "located_in",
+     "South Africa"
+    ],
+    [
+     "Suikerbosrand Range",
+     "located_in",
+     "South Africa"
+    ]
+   ]
+  },
+  {
+   "id": "A19",
+   "part": "A",
+   "source": "Re-DocRED test doc 25 sentence 0",
+   "text": "I, Frankenstein is a 2014 Australian - American action - horror film written and directed by Stuart Beattie, based on the digital - only graphic novel by Kevin Grevioux.",
+   "gold": [
+    [
+     "Kevin Grevioux",
+     "authored",
+     "I, Frankenstein"
+    ]
+   ]
+  },
+  {
+   "id": "A20",
+   "part": "A",
+   "source": "Re-DocRED test doc 443 sentence 3",
+   "text": "It is the junction point for the Turgi – Koblenz – Waldshut line, which crosses the Rhine from Switzerland on the Waldshut to Koblenz railway bridge just to the south of the station.",
+   "gold": [
+    [
+     "Koblenz",
+     "located_in",
+     "Switzerland"
+    ],
+    [
+     "Rhine",
+     "located_in",
+     "Switzerland"
+    ],
+    [
+     "Waldshut",
+     "located_in",
+     "Switzerland"
+    ]
+   ]
+  },
+  {
+   "id": "A21",
+   "part": "A",
+   "source": "Re-DocRED test doc 432 sentence 2",
+   "text": "It meets at Legislative Hall in Dover, Delaware, convening on the second Tuesday of January of odd - numbered years, with a second session of the same Assembly convening likewise in even - numbered years.",
+   "gold": [
+    [
+     "Assembly",
+     "located_in",
+     "Delaware"
+    ],
+    [
+     "Dover",
+     "located_in",
+     "Delaware"
+    ],
+    [
+     "Legislative Hall",
+     "located_in",
+     "Delaware"
+    ],
+    [
+     "Legislative Hall",
+     "located_in",
+     "Dover"
+    ]
+   ]
+  },
+  {
+   "id": "A22",
+   "part": "A",
+   "source": "Re-DocRED test doc 198 sentence 3",
+   "text": "The districts subsequently joined the Austrian client kingdom of Lombardy - Venetia after the Congress of Vienna and eventually become the Italian province of Sondrio.",
+   "gold": [
+    [
+     "Congress of Vienna",
+     "located_in",
+     "Austrian"
+    ],
+    [
+     "Lombardy - Venetia",
+     "located_in",
+     "Austrian"
+    ],
+    [
+     "Lombardy - Venetia",
+     "located_in",
+     "Italian"
+    ],
+    [
+     "Sondrio",
+     "located_in",
+     "Italian"
+    ]
+   ]
+  },
+  {
+   "id": "A23",
+   "part": "A",
+   "source": "Re-DocRED test doc 245 sentence 6",
+   "text": "The Boulari passage, which leads to Noumea, the capital and chief port of New Caledonia, is marked by the Amédée lighthouse.",
+   "gold": [
+    [
+     "Amédée lighthouse",
+     "located_in",
+     "New Caledonia"
+    ],
+    [
+     "Amédée lighthouse",
+     "located_in",
+     "Noumea"
+    ],
+    [
+     "Boulari",
+     "located_in",
+     "New Caledonia"
+    ],
+    [
+     "Noumea",
+     "located_in",
+     "New Caledonia"
+    ]
+   ]
+  },
+  {
+   "id": "A24",
+   "part": "A",
+   "source": "Re-DocRED test doc 27 sentence 0",
+   "text": "\" Black Mirror \" is the first single by Canadian indie rock band Arcade Fire in the US from their second album Neon Bible (while \" Keep the Car Running \" is the first in the UK).",
+   "gold": [
+    [
+     "Arcade Fire",
+     "located_in",
+     "Canadian"
+    ]
+   ]
+  },
+  {
+   "id": "A25",
+   "part": "A",
+   "source": "Re-DocRED test doc 280 sentence 2",
+   "text": "The memorial was designed in 1987 by Holt Hinshaw Pfau Jones, and dedicated on May 9, 1991, to remember the lives of the men and women who have died in the various space programs of the United States, particularly those of NASA.",
+   "gold": [
+    [
+     "NASA",
+     "located_in",
+     "the United States"
+    ]
+   ]
+  },
+  {
+   "id": "A26",
+   "part": "A",
+   "source": "Re-DocRED test doc 417 sentence 2",
+   "text": "He later plied his trade in Scotland at Greenock Morton and Stirling Albion, before dropping into non - league football in England and Wales.",
+   "gold": [
+    [
+     "Greenock Morton",
+     "located_in",
+     "Scotland"
+    ],
+    [
+     "Stirling Albion",
+     "located_in",
+     "Scotland"
+    ]
+   ]
+  },
+  {
+   "id": "A27",
+   "part": "A",
+   "source": "Re-DocRED test doc 368 sentence 2",
+   "text": "Born at Statfold, Staffordshire, Pipe - Wolferstan was educated at Eton College before studying law at Balliol College, Oxford.",
+   "gold": [
+    [
+     "Balliol College",
+     "located_in",
+     "Oxford"
+    ],
+    [
+     "Pipe - Wolferstan",
+     "born_in",
+     "Staffordshire"
+    ],
+    [
+     "Pipe - Wolferstan",
+     "born_in",
+     "Statfold"
+    ],
+    [
+     "Pipe - Wolferstan",
+     "studied_at",
+     "Balliol College"
+    ],
+    [
+     "Pipe - Wolferstan",
+     "studied_at",
+     "Eton College"
+    ],
+    [
+     "Pipe - Wolferstan",
+     "studied_at",
+     "Oxford"
+    ],
+    [
+     "Statfold",
+     "located_in",
+     "Staffordshire"
+    ]
+   ]
+  },
+  {
+   "id": "A28",
+   "part": "A",
+   "source": "Re-DocRED test doc 351 sentence 2",
+   "text": "In 1870, he moved to Piatt County with his parents, who settled in Monticello, Illinois, where he attended the common schools.",
+   "gold": [
+    [
+     "Monticello",
+     "located_in",
+     "Illinois"
+    ],
+    [
+     "Monticello",
+     "located_in",
+     "Piatt County"
+    ],
+    [
+     "Piatt County",
+     "located_in",
+     "Illinois"
+    ]
+   ]
+  },
+  {
+   "id": "A29",
+   "part": "A",
+   "source": "Re-DocRED test doc 55 sentence 1",
+   "text": "She was one of Emperor Xuanzong's favorite concubine, often known as Mei fei (with fei being a standard rank for imperial consorts during her lifetime).",
+   "gold": [
+    [
+     "Mei fei",
+     "married_to",
+     "Xuanzong"
+    ],
+    [
+     "Xuanzong",
+     "married_to",
+     "Mei fei"
+    ]
+   ]
+  },
+  {
+   "id": "A30",
+   "part": "A",
+   "source": "Re-DocRED test doc 197 sentence 3",
+   "text": "The society was named after Dante Alighieri (1265–1321), a pre - Renaissance poet from Florence and the author of The Divine Comedy.",
+   "gold": [
+    [
+     "Dante Alighieri",
+     "authored",
+     "The Divine Comedy"
+    ],
+    [
+     "Dante Alighieri",
+     "born_in",
+     "Florence"
+    ],
+    [
+     "Dante Alighieri",
+     "created",
+     "The Divine Comedy"
+    ]
+   ]
+  },
+  {
+   "id": "A31",
+   "part": "A",
+   "source": "Re-DocRED test doc 348 sentence 2",
+   "text": "Hlawka did most of his work at the Vienna University of Technology.",
+   "gold": [
+    [
+     "Hlawka",
+     "works_at",
+     "Vienna University of Technology"
+    ]
+   ]
+  },
+  {
+   "id": "A32",
+   "part": "A",
+   "source": "Re-DocRED test doc 19 sentence 3",
+   "text": "This followed his farewell to the Continental Army, November 2 at Rockingham near Princeton, New Jersey, and his farewell to his officers, December 4 at Fraunces Tavern in New York City.",
+   "gold": [
+    [
+     "Fraunces Tavern",
+     "located_in",
+     "New York City"
+    ],
+    [
+     "Rockingham",
+     "located_in",
+     "New Jersey"
+    ]
+   ]
+  },
+  {
+   "id": "A33",
+   "part": "A",
+   "source": "Re-DocRED test doc 449 sentence 0",
+   "text": "José María (abbreviated José Mª) is a Spanish language male given name, usually considered a single given name rather than two names, and is a combination of the Spanish names of Joseph and Mary, the parents of Jesus Christ.",
+   "gold": [
+    [
+     "Joseph",
+     "married_to",
+     "Mary"
+    ],
+    [
+     "Mary",
+     "married_to",
+     "Joseph"
+    ]
+   ]
+  },
+  {
+   "id": "A34",
+   "part": "A",
+   "source": "Re-DocRED test doc 184 sentence 0",
+   "text": "Mykhaylo Fomenko (; born 19 September 1948) is a Ukrainian former association footballer and former head coach of the Ukraine national team.",
+   "gold": [
+    [
+     "Ukraine national team",
+     "located_in",
+     "Ukrainian"
+    ]
+   ]
+  },
+  {
+   "id": "A35",
+   "part": "A",
+   "source": "Re-DocRED test doc 392 sentence 7",
+   "text": "Today the lands are occupied by the US Army at Fort Benning, Georgia.",
+   "gold": [
+    [
+     "Fort Benning",
+     "located_in",
+     "Georgia"
+    ]
+   ]
+  },
+  {
+   "id": "A36",
+   "part": "A",
+   "source": "Re-DocRED test doc 105 sentence 2",
+   "text": "The series premiered on ABS - CBN's Kapamilya Gold afternoon block and worldwide on TFC, replacing from April 16 to November 16, 2012, with a total of 152 episodes.",
+   "gold": [
+    [
+     "Kapamilya Gold",
+     "subsidiary_of",
+     "ABS - CBN"
+    ]
+   ]
+  },
+  {
+   "id": "A37",
+   "part": "A",
+   "source": "Re-DocRED test doc 388 sentence 5",
+   "text": "In fact, it is altogether possible that Lilio collaborated for the illustrations of Cesare Ripa's Iconologia, which was a popular source for such motifs for a very long time.",
+   "gold": [
+    [
+     "Cesare Ripa",
+     "authored",
+     "Iconologia"
+    ],
+    [
+     "Cesare Ripa",
+     "created",
+     "Iconologia"
+    ]
+   ]
+  },
+  {
+   "id": "A38",
+   "part": "A",
+   "source": "Re-DocRED test doc 429 sentence 0",
+   "text": "The Waterloo Moraine is a landform and sediment body that was created as a moraine in the Regional Municipality of Waterloo, in Ontario, Canada.",
+   "gold": [
+    [
+     "Ontario",
+     "located_in",
+     "Canada"
+    ],
+    [
+     "Regional Municipality of Waterloo",
+     "located_in",
+     "Canada"
+    ],
+    [
+     "Regional Municipality of Waterloo",
+     "located_in",
+     "Ontario"
+    ],
+    [
+     "Waterloo Moraine",
+     "located_in",
+     "Canada"
+    ],
+    [
+     "Waterloo Moraine",
+     "located_in",
+     "Ontario"
+    ],
+    [
+     "Waterloo Moraine",
+     "located_in",
+     "Regional Municipality of Waterloo"
+    ]
+   ]
+  },
+  {
+   "id": "A39",
+   "part": "A",
+   "source": "Re-DocRED test doc 175 sentence 4",
+   "text": "Since May 2012 he has been Aide to the President of the Russian Federation responsible for international affairs in the Presidential Administration.",
+   "gold": [
+    [
+     "Presidential Administration",
+     "located_in",
+     "Russian Federation"
+    ]
+   ]
+  },
+  {
+   "id": "A40",
+   "part": "A",
+   "source": "Re-DocRED test doc 4 sentence 0",
+   "text": "\" Long Hard Road Out of Hell \" is a song by American rock band Marilyn Manson and British trip hop band Sneaker Pimps, released as a single from the soundtrack to the 1997 motion picture Spawn.",
+   "gold": [
+    [
+     "Sneaker Pimps",
+     "located_in",
+     "British"
+    ]
+   ]
+  },
+  {
+   "id": "A41",
+   "part": "A",
+   "source": "Re-DocRED test doc 487 sentence 3",
+   "text": "US - born Tao graduated from the University of Washington majoring in political science and drama.",
+   "gold": [
+    [
+     "Tao",
+     "born_in",
+     "US"
+    ],
+    [
+     "Tao",
+     "studied_at",
+     "University of Washington"
+    ],
+    [
+     "University of Washington",
+     "located_in",
+     "US"
+    ]
+   ]
+  },
+  {
+   "id": "A42",
+   "part": "A",
+   "source": "Re-DocRED test doc 3 sentence 0",
+   "text": "A Bantustan (also known as Bantu homeland, black homeland, black state or simply homeland;) was a territory set aside for black inhabitants of South Africa and South West Africa (now Namibia), as part of the policy of apartheid.",
+   "gold": [
+    [
+     "Bantu homeland",
+     "located_in",
+     "South Africa"
+    ],
+    [
+     "Bantustan",
+     "located_in",
+     "South Africa"
+    ]
+   ]
+  },
+  {
+   "id": "A43",
+   "part": "A",
+   "source": "Re-DocRED test doc 371 sentence 3",
+   "text": "The following year, Pedro and Teresa Cristina had another son, Pedro Afonso, but he too died in infancy.",
+   "gold": [
+    [
+     "Pedro",
+     "married_to",
+     "Teresa Cristina"
+    ],
+    [
+     "Teresa Cristina",
+     "married_to",
+     "Pedro"
+    ]
+   ]
+  },
+  {
+   "id": "A44",
+   "part": "A",
+   "source": "Re-DocRED test doc 165 sentence 2",
+   "text": "The Corps is a member of the Kösener Senioren - Convents - Verband (KSCV), the oldest federation of classical European fraternal corporations with roots dating back to the 15th century and member fraternities across Austria, Belgium, Germany, Hungary, Latvia and Switzerland.",
+   "gold": [
+    [
+     "Corps",
+     "located_in",
+     "Germany"
+    ],
+    [
+     "Kösener Senioren - Convents - Verband",
+     "located_in",
+     "Germany"
+    ]
+   ]
+  },
+  {
+   "id": "A45",
+   "part": "A",
+   "source": "Re-DocRED test doc 394 sentence 5",
+   "text": "The resort was located on Glen Island, in New Rochelle's Lower Harbor, just off of Long Island Sound.",
+   "gold": [
+    [
+     "Glen Island",
+     "located_in",
+     "New Rochelle"
+    ],
+    [
+     "Lower Harbor",
+     "located_in",
+     "New Rochelle"
+    ]
+   ]
+  },
+  {
+   "id": "A46",
+   "part": "A",
+   "source": "Re-DocRED test doc 186 sentence 0",
+   "text": "Zillebeke Churchyard Commonwealth War Graves Commission Cemetery forms part of the village churchyard located around the Catholic parish church of Zillebeke in Belgium.",
+   "gold": [
+    [
+     "Zillebeke",
+     "located_in",
+     "Belgium"
+    ],
+    [
+     "Zillebeke Churchyard Commonwealth War Graves Commission Cemetery",
+     "located_in",
+     "Belgium"
+    ],
+    [
+     "Zillebeke Churchyard Commonwealth War Graves Commission Cemetery",
+     "located_in",
+     "Zillebeke"
+    ]
+   ]
+  },
+  {
+   "id": "A47",
+   "part": "A",
+   "source": "Re-DocRED test doc 123 sentence 0",
+   "text": "Oliver & Company is a 1988 American animated musical comedy - drama film produced by Walt Disney Feature Animation and released on November 18, 1988, by Walt Disney Pictures.",
+   "gold": [
+    [
+     "Walt Disney Feature Animation",
+     "located_in",
+     "American"
+    ],
+    [
+     "Walt Disney Feature Animation",
+     "subsidiary_of",
+     "Walt Disney Pictures"
+    ],
+    [
+     "Walt Disney Pictures",
+     "located_in",
+     "American"
+    ]
+   ]
+  },
+  {
+   "id": "A48",
+   "part": "A",
+   "source": "Re-DocRED test doc 195 sentence 0",
+   "text": "John Dacher McWilliams (July 23, 1891 – March 30, 1975) was a U.S. Representative from Connecticut.",
+   "gold": [
+    [
+     "Connecticut",
+     "located_in",
+     "U.S."
+    ]
+   ]
+  },
+  {
+   "id": "A49",
+   "part": "A",
+   "source": "Re-DocRED test doc 61 sentence 7",
+   "text": "It also celebrates the inauguration of Kenya's first president, Jomo Kenyatta, in the same night.",
+   "gold": [
+    [
+     "Jomo Kenyatta",
+     "leads",
+     "Kenya"
+    ]
+   ]
+  },
+  {
+   "id": "A50",
+   "part": "A",
+   "source": "Re-DocRED test doc 405 sentence 8",
+   "text": "His father Antoine arranged for Henri to marry Anne Phélypeaux in 1613.",
+   "gold": [
+    [
+     "Anne Phélypeaux",
+     "married_to",
+     "Henri"
+    ],
+    [
+     "Henri",
+     "married_to",
+     "Anne Phélypeaux"
+    ]
+   ]
+  },
+  {
+   "id": "A51",
+   "part": "A",
+   "source": "Re-DocRED test doc 385 sentence 3",
+   "text": "The film was released in Hong Kong on February 18, in China on February 19 and worldwide on Netflix outside China on February 26, 2016.",
+   "gold": [
+    [
+     "Hong Kong",
+     "located_in",
+     "China"
+    ]
+   ]
+  },
+  {
+   "id": "A52",
+   "part": "A",
+   "source": "Re-DocRED test doc 396 sentence 2",
+   "text": "Water from Lough Owel feeds the Royal Canal, a canal crossing Ireland from Dublin to the River Shannon.",
+   "gold": [
+    [
+     "Dublin",
+     "located_in",
+     "Ireland"
+    ],
+    [
+     "Lough Owel",
+     "located_in",
+     "Ireland"
+    ],
+    [
+     "River Shannon",
+     "located_in",
+     "Ireland"
+    ],
+    [
+     "Royal Canal",
+     "located_in",
+     "Dublin"
+    ],
+    [
+     "Royal Canal",
+     "located_in",
+     "Ireland"
+    ]
+   ]
+  },
+  {
+   "id": "A53",
+   "part": "A",
+   "source": "Re-DocRED test doc 233 sentence 3",
+   "text": "He was also an associate of Bruno Rossi at Massachusetts Institute of Technology.",
+   "gold": [
+    [
+     "Bruno Rossi",
+     "works_at",
+     "Massachusetts Institute of Technology"
+    ]
+   ]
+  },
+  {
+   "id": "A54",
+   "part": "A",
+   "source": "Re-DocRED test doc 106 sentence 2",
+   "text": "Before 1945 the area was part of Germany (East Prussia).",
+   "gold": [
+    [
+     "East Prussia",
+     "located_in",
+     "Germany"
+    ]
+   ]
+  },
+  {
+   "id": "A55",
+   "part": "A",
+   "source": "Re-DocRED test doc 180 sentence 0",
+   "text": "Nishiyama Minako (西山 美なコ, born in Hyōgo prefecture, in 1965) is a Japanese contemporary artist whose works have dealt with cultures, customs, and the representations of young females in Japanese media and popular culture.",
+   "gold": [
+    [
+     "Hyōgo prefecture",
+     "located_in",
+     "Japanese"
+    ],
+    [
+     "Nishiyama Minako",
+     "born_in",
+     "Hyōgo prefecture"
+    ]
+   ]
+  },
+  {
+   "id": "A56",
+   "part": "A",
+   "source": "Re-DocRED test doc 200 sentence 2",
+   "text": "To prepare readers for the second trilogy, Sanderson wrote a transitional sequel,, which then turned into the first installment in the four - book Wax and Wayne series, set 300 years later.",
+   "gold": [
+    [
+     "Sanderson",
+     "authored",
+     "Wax and Wayne"
+    ],
+    [
+     "Sanderson",
+     "created",
+     "Wax and Wayne"
+    ]
+   ]
+  },
+  {
+   "id": "A57",
+   "part": "A",
+   "source": "Re-DocRED test doc 192 sentence 5",
+   "text": "In 1936 he was created a Baronet, of Eyeworth in the County of Bedford.",
+   "gold": [
+    [
+     "Eyeworth",
+     "located_in",
+     "County of Bedford"
+    ]
+   ]
+  },
+  {
+   "id": "A58",
+   "part": "A",
+   "source": "Re-DocRED test doc 145 sentence 5",
+   "text": "As the first fictional detective, Poe's Dupin displays many traits which became literary conventions in subsequent fictional detectives, including Sherlock Holmes and Hercule Poirot.",
+   "gold": [
+    [
+     "Poe",
+     "authored",
+     "Dupin"
+    ],
+    [
+     "Poe",
+     "created",
+     "Dupin"
+    ],
+    [
+     "Poe",
+     "created",
+     "Hercule Poirot"
+    ]
+   ]
+  },
+  {
+   "id": "A59",
+   "part": "A",
+   "source": "Re-DocRED test doc 332 sentence 2",
+   "text": "The Texas seaport of Port Lavaca is located on the system's northwestern extension of Lavaca Bay.",
+   "gold": [
+    [
+     "Lavaca Bay",
+     "located_in",
+     "Texas"
+    ],
+    [
+     "Port Lavaca",
+     "located_in",
+     "Texas"
+    ]
+   ]
+  },
+  {
+   "id": "A60",
+   "part": "A",
+   "source": "Re-DocRED test doc 87 sentence 0",
+   "text": "Cine - Allianz Tonfilm was a German film production company established in 1932 by Arnold Pressburger and Gregor Rabinovitch.",
+   "gold": [
+    [
+     "Arnold Pressburger",
+     "founded",
+     "Cine - Allianz Tonfilm"
+    ],
+    [
+     "Cine - Allianz Tonfilm",
+     "located_in",
+     "German"
+    ],
+    [
+     "Gregor Rabinovitch",
+     "founded",
+     "Cine - Allianz Tonfilm"
+    ]
+   ]
+  },
+  {
+   "id": "B01",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Amazon bought Whole Foods in 2017.",
+   "gold": [
+    [
+     "Amazon",
+     "acquired",
+     "Whole Foods"
+    ]
+   ]
+  },
+  {
+   "id": "B02",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Instagram was purchased by Facebook in 2012.",
+   "gold": [
+    [
+     "Facebook",
+     "acquired",
+     "Instagram"
+    ]
+   ]
+  },
+  {
+   "id": "B03",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Disney completed its takeover of Pixar in 2006.",
+   "gold": [
+    [
+     "Disney",
+     "acquired",
+     "Pixar"
+    ]
+   ]
+  },
+  {
+   "id": "B04",
+   "part": "B",
+   "source": "hand-written",
+   "text": "In 2016, Microsoft paid billions to buy LinkedIn.",
+   "gold": [
+    [
+     "Microsoft",
+     "acquired",
+     "LinkedIn"
+    ]
+   ]
+  },
+  {
+   "id": "B05",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Wilhelm Roentgen discovered X-rays in 1895.",
+   "gold": [
+    [
+     "Wilhelm Roentgen",
+     "discovered",
+     "X-rays"
+    ]
+   ]
+  },
+  {
+   "id": "B06",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Neptune was first observed by Johann Galle in 1846.",
+   "gold": [
+    [
+     "Johann Galle",
+     "discovered",
+     "Neptune"
+    ]
+   ]
+  },
+  {
+   "id": "B07",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Insulin was isolated by Frederick Banting and Charles Best.",
+   "gold": [
+    [
+     "Frederick Banting",
+     "discovered",
+     "insulin"
+    ],
+    [
+     "Charles Best",
+     "discovered",
+     "insulin"
+    ]
+   ]
+  },
+  {
+   "id": "B08",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Aspirin relieves headaches and lowers fever.",
+   "gold": [
+    [
+     "aspirin",
+     "treats",
+     "headaches"
+    ],
+    [
+     "aspirin",
+     "treats",
+     "fever"
+    ]
+   ]
+  },
+  {
+   "id": "B09",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Doctors prescribe metformin for type 2 diabetes.",
+   "gold": [
+    [
+     "metformin",
+     "treats",
+     "type 2 diabetes"
+    ]
+   ]
+  },
+  {
+   "id": "B10",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Ibuprofen is commonly used to reduce inflammation.",
+   "gold": [
+    [
+     "ibuprofen",
+     "treats",
+     "inflammation"
+    ]
+   ]
+  },
+  {
+   "id": "B11",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Excessive sugar intake can lead to tooth decay.",
+   "gold": [
+    [
+     "excessive sugar intake",
+     "causes",
+     "tooth decay"
+    ]
+   ]
+  },
+  {
+   "id": "B12",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Air pollution triggers asthma attacks in children.",
+   "gold": [
+    [
+     "air pollution",
+     "causes",
+     "asthma attacks"
+    ]
+   ]
+  },
+  {
+   "id": "B13",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Mosquito bites spread malaria.",
+   "gold": [
+    [
+     "mosquito bites",
+     "causes",
+     "malaria"
+    ]
+   ]
+  },
+  {
+   "id": "B14",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Pepsi has long been a rival of Coca-Cola.",
+   "gold": [
+    [
+     "Pepsi",
+     "competes_with",
+     "Coca-Cola"
+    ]
+   ]
+  },
+  {
+   "id": "B15",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Airbus competes fiercely with Boeing for aircraft orders.",
+   "gold": [
+    [
+     "Airbus",
+     "competes_with",
+     "Boeing"
+    ]
+   ]
+  },
+  {
+   "id": "B16",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Samsung and Apple battle for the smartphone market.",
+   "gold": [
+    [
+     "Samsung",
+     "competes_with",
+     "Apple"
+    ]
+   ]
+  },
+  {
+   "id": "B17",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Spotify partnered with Uber to let riders choose music.",
+   "gold": [
+    [
+     "Spotify",
+     "collaborates_with",
+     "Uber"
+    ]
+   ]
+  },
+  {
+   "id": "B18",
+   "part": "B",
+   "source": "hand-written",
+   "text": "NASA worked closely with SpaceX on the Crew Dragon program.",
+   "gold": [
+    [
+     "NASA",
+     "collaborates_with",
+     "SpaceX"
+    ]
+   ]
+  },
+  {
+   "id": "B19",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Exxon merged with Mobil in 1999 to form ExxonMobil.",
+   "gold": [
+    [
+     "Exxon",
+     "merged_with",
+     "Mobil"
+    ]
+   ]
+  },
+  {
+   "id": "B20",
+   "part": "B",
+   "source": "hand-written",
+   "text": "In 2015, Kraft and Heinz merged into a single company.",
+   "gold": [
+    [
+     "Kraft",
+     "merged_with",
+     "Heinz"
+    ]
+   ]
+  },
+  {
+   "id": "B21",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Rahul Mehta reports to Priya Sharma, the head of operations.",
+   "gold": [
+    [
+     "Rahul Mehta",
+     "reports_to",
+     "Priya Sharma"
+    ]
+   ]
+  },
+  {
+   "id": "B22",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Lisa Chen reports to Jensen Huang.",
+   "gold": [
+    [
+     "Lisa Chen",
+     "reports_to",
+     "Jensen Huang"
+    ]
+   ]
+  },
+  {
+   "id": "B23",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Tim Cook runs Apple from its headquarters in Cupertino.",
+   "gold": [
+    [
+     "Tim Cook",
+     "leads",
+     "Apple"
+    ],
+    [
+     "Apple",
+     "located_in",
+     "Cupertino"
+    ]
+   ]
+  },
+  {
+   "id": "B24",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Satya Nadella took over as chief executive of Microsoft in 2014.",
+   "gold": [
+    [
+     "Satya Nadella",
+     "leads",
+     "Microsoft"
+    ]
+   ]
+  },
+  {
+   "id": "B25",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Mary Barra heads General Motors, which is based in Detroit.",
+   "gold": [
+    [
+     "Mary Barra",
+     "leads",
+     "General Motors"
+    ],
+    [
+     "General Motors",
+     "located_in",
+     "Detroit"
+    ]
+   ]
+  },
+  {
+   "id": "B26",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Reed Hastings and Marc Randolph co-founded Netflix in 1997.",
+   "gold": [
+    [
+     "Reed Hastings",
+     "founded",
+     "Netflix"
+    ],
+    [
+     "Marc Randolph",
+     "founded",
+     "Netflix"
+    ]
+   ]
+  },
+  {
+   "id": "B27",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Wikipedia was launched by Jimmy Wales and Larry Sanger.",
+   "gold": [
+    [
+     "Jimmy Wales",
+     "founded",
+     "Wikipedia"
+    ],
+    [
+     "Larry Sanger",
+     "founded",
+     "Wikipedia"
+    ]
+   ]
+  },
+  {
+   "id": "B28",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Tesla, founded in 2003, is headquartered in Austin.",
+   "gold": [
+    [
+     "Tesla",
+     "located_in",
+     "Austin"
+    ]
+   ]
+  },
+  {
+   "id": "B29",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Ada Lovelace was born in London and studied mathematics privately.",
+   "gold": [
+    [
+     "Ada Lovelace",
+     "born_in",
+     "London"
+    ]
+   ]
+  },
+  {
+   "id": "B30",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Srinivasa Ramanujan, who was born in Erode, later studied at Trinity College.",
+   "gold": [
+    [
+     "Srinivasa Ramanujan",
+     "born_in",
+     "Erode"
+    ],
+    [
+     "Srinivasa Ramanujan",
+     "studied_at",
+     "Trinity College"
+    ]
+   ]
+  },
+  {
+   "id": "B31",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Barack Obama graduated from Columbia University and Harvard Law School.",
+   "gold": [
+    [
+     "Barack Obama",
+     "studied_at",
+     "Columbia University"
+    ],
+    [
+     "Barack Obama",
+     "studied_at",
+     "Harvard Law School"
+    ]
+   ]
+  },
+  {
+   "id": "B32",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Michelle Obama is married to Barack Obama.",
+   "gold": [
+    [
+     "Michelle Obama",
+     "married_to",
+     "Barack Obama"
+    ]
+   ]
+  },
+  {
+   "id": "B33",
+   "part": "B",
+   "source": "hand-written",
+   "text": "George Orwell wrote Animal Farm.",
+   "gold": [
+    [
+     "George Orwell",
+     "authored",
+     "Animal Farm"
+    ]
+   ]
+  },
+  {
+   "id": "B34",
+   "part": "B",
+   "source": "hand-written",
+   "text": "The novel Pride and Prejudice was written by Jane Austen.",
+   "gold": [
+    [
+     "Jane Austen",
+     "authored",
+     "Pride and Prejudice"
+    ]
+   ]
+  },
+  {
+   "id": "B35",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Linus Torvalds created Linux while he was a student in Helsinki.",
+   "gold": [
+    [
+     "Linus Torvalds",
+     "created",
+     "Linux"
+    ]
+   ]
+  },
+  {
+   "id": "B36",
+   "part": "B",
+   "source": "hand-written",
+   "text": "The iPhone was designed by Apple.",
+   "gold": [
+    [
+     "Apple",
+     "created",
+     "iPhone"
+    ]
+   ]
+  },
+  {
+   "id": "B37",
+   "part": "B",
+   "source": "hand-written",
+   "text": "WhatsApp is owned by Meta.",
+   "gold": [
+    [
+     "WhatsApp",
+     "subsidiary_of",
+     "Meta"
+    ]
+   ]
+  },
+  {
+   "id": "B38",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Jaguar Land Rover is a part of Tata Motors.",
+   "gold": [
+    [
+     "Jaguar Land Rover",
+     "subsidiary_of",
+     "Tata Motors"
+    ]
+   ]
+  },
+  {
+   "id": "B39",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Grace Hopper worked for the United States Navy.",
+   "gold": [
+    [
+     "Grace Hopper",
+     "works_at",
+     "United States Navy"
+    ]
+   ]
+  },
+  {
+   "id": "B40",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Katherine Johnson was employed by NASA as a mathematician.",
+   "gold": [
+    [
+     "Katherine Johnson",
+     "works_at",
+     "NASA"
+    ]
+   ]
+  },
+  {
+   "id": "B41",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Tokyo is the capital of Japan.",
+   "gold": [
+    [
+     "Tokyo",
+     "located_in",
+     "Japan"
+    ]
+   ]
+  },
+  {
+   "id": "B42",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Bengaluru lies in the southern state of Karnataka.",
+   "gold": [
+    [
+     "Bengaluru",
+     "located_in",
+     "Karnataka"
+    ]
+   ]
+  },
+  {
+   "id": "B43",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Elon Musk and Jeff Bezos attended the same conference in Paris.",
+   "gold": []
+  },
+  {
+   "id": "B44",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Lionel Messi met Cristiano Ronaldo before the match in Madrid.",
+   "gold": []
+  },
+  {
+   "id": "B45",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Google and Microsoft both released new laptops last year.",
+   "gold": []
+  },
+  {
+   "id": "B46",
+   "part": "B",
+   "source": "hand-written",
+   "text": "Shakespeare and Marlowe lived in London at the same time.",
+   "gold": []
+  }
+ ]
+}
