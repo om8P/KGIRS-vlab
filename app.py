@@ -20,7 +20,7 @@ Note: the page itself uses no custom CSS (Streamlit's native light/dark themes r
 seamlessly); the one deliberate exception is a small, self-contained stylesheet for the
 hover pop-up cards, which pure Streamlit widgets cannot produce on their own.
 
-Code layout: this file is only the entry point (`streamlit run exp7_relationship_extraction.py`);
+Code layout: this file is only the entry point (`streamlit run app.py`);
 the lab itself lives in the exp7/ package, one module per concern.
 """
 
