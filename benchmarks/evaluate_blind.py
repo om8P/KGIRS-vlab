@@ -15,7 +15,6 @@ Usage:   python benchmarks/evaluate_blind.py          (print the table)
                                                        which the lab's Theory page charts)
 """
 
-import importlib.util
 import json
 from datetime import date
 import re
@@ -23,16 +22,20 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-APP = HERE.parent / "exp7_relationship_extraction.py"
 SYMMETRIC = {"married_to", "collaborates_with", "competes_with", "merged_with"}
 
 
 def load_app():
-    spec = importlib.util.spec_from_file_location("exp7_app", APP)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules["exp7_app"] = module
-    spec.loader.exec_module(module)
-    return module
+    """The lab's extraction functions, imported from the exp7 package."""
+    sys.path.insert(0, str(HERE.parent))
+    from types import SimpleNamespace
+    from exp7.bert_method import bert_classifier_available
+    from exp7.charts import _COMPARISON_METHODS
+    from exp7.entities import spacy_parser_available
+    from exp7.extraction import extract_relationships
+    return SimpleNamespace(
+        extract_relationships=extract_relationships, _COMPARISON_METHODS=_COMPARISON_METHODS,
+        spacy_parser_available=spacy_parser_available, bert_classifier_available=bert_classifier_available)
 
 
 def norm_entity(text):
